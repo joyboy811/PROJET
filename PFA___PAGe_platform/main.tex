@@ -1,0 +1,492 @@
+\documentclass{rapportENSIAS}
+
+% ==========================
+% Packages
+% ==========================
+\usepackage{lipsum}
+\usepackage{minted}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tgheros}
+\usepackage{tikz}
+
+\renewcommand{\familydefault}{\sfdefault}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+
+% ===== MASQUER TOUS LES NUMÉROS =====
+\setcounter{secnumdepth}{0}              % Sections / sous-sections
+\captionsetup{labelformat=empty}         % Figures
+\captionsetup[table]{labelformat=empty}  % Tableaux
+
+\begin{document}
+
+% ==========================
+% Page de garde
+% ==========================
+% Reduce sizes slightly and insert app logo into the subtitle area
+\UE{Projet de Fin d'Année}
+\sujet{\vspace{-0.3cm}\begin{center}\includegraphics[width=0.20\textwidth]{logos/LogoPAGe.png}\end{center}\vspace{-1.6cm}}
+\titre{\fontsize{18}{20}\selectfont Plateforme de gestion des risques algorithmiques\\
+\rmfamily\mdseries Développement et conception d'une plateforme de gouvernance des risques algorithmiques}
+\eleves{
+Oussama \textsc{AIT ELKABIR}\\
+Akram \textsc{AL OUMAMI}\\
+
+}
+\encadrant{Pr. B. BOUNABAT}
+\jury{Pr. B. BOUNABAT \\ Pr. M. EL HAMLAOUI}
+\annee{2025-2026}
+
+\fairemarges
+\fairepagedegarde
+
+% ==========================
+% Page de remerciements (chapitre non numéroté, page affichant la numérotation)
+% ==========================
+\cleardoublepage
+\chapter*{Remerciement}
+\vspace*{0.8cm}
+\noindent Nous souhaitons exprimer nos plus chaleureux remerciements à notre encadrant, \textbf{Pr. B. BOUNABAT}. Sa disponibilité permanente, sa rigueur scientifique et ses retours précis ont été essentiels pour structurer notre démarche, affiner notre problématique et améliorer la qualité technique du projet. Ses conseils méthodologiques, sa capacité à poser les bonnes questions et son soutien moral dans les moments difficiles nous ont permis d'avancer sereinement.
+
+\vspace{0.5cm}
+\noindent Nous adressons également nos sincères remerciements aux membres du jury, \textbf{Pr. B. BOUNABAT} et \textbf{Pr. M. EL HAMLAOUI}, pour le temps qu'ils ont consacré à l'examen de notre travail et pour leurs remarques constructives. Leurs observations ont apporté un regard critique précieux, nous aidant à clarifier certaines hypothèses et à mieux formuler nos conclusions.
+
+\vspace{0.5cm}
+\noindent Enfin, nous souhaitons remercier chaleureusement nos amis, collègues et toutes les personnes qui, par leurs conseils, relectures, tests et encouragements, ont contribué à la réussite de ce projet. Qu'il s'agisse d'un échange technique lors d'une séance de debugging, d'une relecture attentive d'un chapitre, ou d'un simple mot d'encouragement, chaque contribution a été pour nous une aide précieuse.
+
+\vspace{0.5cm}
+\noindent Ce projet a été pour nous une riche expérience d'apprentissage et de collaboration ; nous remercions toutes les personnes qui ont participé à ce parcours.
+
+\vspace{1cm}
+\clearpage
+
+% ==========================
+% Résumé et Abstract (chapitres non numérotés, chacune sur sa propre page)
+% ==========================
+\cleardoublepage
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+\thispagestyle{plain}
+
+Ce rapport présente le Projet de Fin d'Année « Développement et conception d'une plateforme de gouvernance des risques algorithmiques ». Le projet couvre l'analyse des besoins, la conception et la réalisation opérationnelle d'une plateforme appelée PAGe Platform, destinée aux organisations publiques soucieuses de gouverner les risques algorithmiques.
+
+La première partie définit les concepts et notions essentiels qui fondent toute l'approche : qu'entend-on par risque algorithmique, indicateur d'évaluation, mécanisme de mitigation (RMM), pilier de gouvernance et maturité institutionnelle. Elle établit le cadre conceptuel et méthodologique permettant aux organisations publiques d'évaluer et de suivre systématiquement les risques liés à l'utilisation d'algorithmes dans leurs processus décisionnels et opérationnels.
+
+La deuxième partie décrit l'architecture générale et fonctionnelle de la plateforme, organisée autour de trois modules complémentaires : un premier module d'évaluation de la gravité et de l'exposition aux risques algorithmiques, un second module d'évaluation des capacités institutionnelles et des mécanismes de mitigation disponibles, et un troisième module d'analyse d'impact et de simulation des scénarios possibles. Elle expose en détail la logique d'agrégation des mesures élémentaires et le processus de calcul des scores de maturité institutionnelle.
+
+La troisième partie rapporte et documente la phase de réalisation concrète du projet : modélisation et structuration des données, implémentation des modules fonctionnels, et validation rigoureuse des résultats. Elle présente les livrables produits (définitions formelles, tableaux d'agrégation, exemples numériques, règles de calcul détaillées) et décrit les principaux cas d'usage et scénarios supportés par la plateforme.
+
+Le rapport conclut en fournissant des recommandations pratiques pour l'utilisation effective de la plateforme et l'interprétation correcte des résultats afin d'améliorer progressivement la gouvernance institutionnelle des risques algorithmiques.
+\vspace{6cm}
+\begin{quote}
+\textbf{Mots-clés :} Gouvernance algorithmique, Indicateurs, Mitigation, Simulation, Tableau de bord.
+\end{quote}
+
+\clearpage
+\cleardoublepage
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\thispagestyle{plain}
+
+This report presents the Final Year Project ``Development and Design of an Algorithmic Governance Risk Management Platform''. The project encompasses requirements analysis, design, and operational implementation of a comprehensive platform called PAGe Platform, intended for public organizations seeking to govern algorithmic risks effectively and systematically.
+
+The first part defines the essential concepts and notions underlying the entire approach: what constitutes algorithmic risk, evaluation indicators, mitigation mechanisms (RMM), governance pillars, and institutional maturity. It establishes the conceptual and methodological framework enabling public organizations to systematically evaluate and monitor the risks associated with the use of algorithms in their decision-making and operational processes.
+
+The second part describes the general and functional architecture of the platform, organized around three complementary and integrated modules: a first module dedicated to assessing the severity and exposure to algorithmic risks, a second module for evaluating institutional capacities and available mitigation mechanisms, and a third module for impact analysis and scenario simulation. It details the logic of aggregating elementary measurements and the methodological process for calculating institutional maturity scores.
+
+The third part reports and documents the concrete realization phase of the project: data modeling and structuring, implementation of functional modules, and rigorous validation of computational results. It presents the key deliverables produced (formal definitions, aggregation tables, numerical examples, detailed calculation rules) and describes the principal use cases and scenarios supported by the platform.
+
+The report concludes by providing practical recommendations for the effective operational use of the platform and correct interpretation of results, enabling organizations to progressively improve their institutional governance of algorithmic risks.
+\vspace{6cm}
+\begin{quote}
+\textbf{Keywords:} Algorithmic governance, Indicators, Mitigation, Simulation, Dashboard.
+\end{quote}
+\clearpage
+\cleardoublepage
+% ==========================
+\vspace{-1cm}
+\tabledematieres
+
+% ============================================================
+%                    CHAPITRE 1 — CONTEXTE GÉNÉRAL
+% ============================================================
+\section{Contexte général}
+
+\subsection{Introduction}
+Ce premier chapitre pose le cadre dans lequel s'inscrit le présent Projet de Fin d'Année (PFA). Il expose d'abord le contexte général lié à l'usage croissant de l'intelligence artificielle dans le secteur public, puis formule la problématique à laquelle la PAGe Platform entend répondre. Nous présentons ensuite les objectifs du projet, le périmètre et la répartition du travail entre les deux binômes, la méthodologie adoptée et le planning prévisionnel. Le chapitre se conclut par une vue d'ensemble de l'organisation du rapport.
+
+% ----------------------------------------------------------
+\subsection{Contexte : l'IA dans le secteur public et les risques algorithmiques}
+L'intelligence artificielle (IA) et, plus largement, les systèmes algorithmiques occupent une place croissante dans la conception, la décision et l'exploitation des services publics numériques. Les administrations publiques y recourent pour automatiser certaines décisions administratives, améliorer la performance et l'efficacité des e-services, soutenir l'allocation des ressources publiques, et renforcer la détection de la fraude ou l'analyse prédictive.
+
+Cependant, ces usages introduisent également de nouveaux risques systémiques : biais algorithmiques, opacité décisionnelle, fragmentation des données, incohérences entre règles administratives et algorithmes, fragilité juridique et faible contestabilité des décisions. Les risques PAGe typiques incluent notamment : la fragmentation informationnelle entre administrations, l'incohérence entre règles administratives et algorithmes, et les biais et discriminations algorithmiques.
+
+Plusieurs cadres normatifs et institutionnels internationaux ont récemment formalisé des principes pour une IA digne de confiance et une gouvernance algorithmique responsable. En particulier :
+\begin{itemize}
+    \item les principes de l'OCDE sur l'intelligence artificielle (2019), qui promeuvent transparence, robustesse et responsabilité ;
+    \item les recommandations de l'UNESCO sur l'éthique de l'IA (2021) ;
+    \item le Règlement européen sur l'intelligence artificielle (\textit{AI Act}, 2024), qui impose une classification par niveau de risque et des obligations de transparence et d'audit ;
+    \item le Règlement Général sur la Protection des Données (RGPD), qui renforce la protection des droits fondamentaux dans les traitements automatisés.
+\end{itemize}
+
+Malgré ces avancées normatives, les administrations disposent rarement d'instruments concrets permettant de \textit{mesurer objectivement} leur exposition aux risques algorithmiques et leur capacité réelle à y répondre. C'est précisément ce vide méthodologique et opérationnel que la PAGe Platform vise à combler.
+
+% ----------------------------------------------------------
+\subsection{Présentation du projet}
+Le projet PAGe Platform (\textit{PAGe Risk-Based Observatory}) constitue un dispositif analytique destiné à mesurer de manière systématique et objective les risques associés à la \textbf{Gouvernance Algorithmique Publique (PAGe)}, entendue comme l'usage croissant de l'intelligence artificielle dans la conception, la décision et l'exploitation des services publics numériques.
+
+L'Observatoire poursuit un double objectif :
+\begin{itemize}
+    \item mesurer le niveau d'exposition aux risques algorithmiques ;
+    \item éclairer la capacité institutionnelle à y répondre et évaluer, de manière prédictive, l'impact réel des mécanismes de gestion des risques.
+\end{itemize}
+
+Il s'inscrit dans une architecture intégrée composée de trois modules complémentaires :
+\begin{itemize}
+    \item \textbf{Module O-PAGe} --- mesure de la \textit{gravité} des risques : identification des risques, modélisation par indicateurs quantifiables, normalisation et calcul pondéré du \textit{Risk Score}, catégorisation du niveau de risque (Low, Moderate, High, Critical) ;
+    \item \textbf{Module M-PAGe} --- mesure de la \textit{capacité de mitigation} : évaluation de la maturité institutionnelle à travers des piliers de gouvernance (Key Pillars), dimensions, facteurs et items de questionnaire, calcul des niveaux RL, RMMC, RMC et GPM ;
+    \item \textbf{Module I-PAGe} --- mesure de l'\textit{impact réel} de la mitigation : matrice d'impact reliant mécanismes et indicateurs, simulation du déploiement des RMM, recalcul dynamique du Risk Score et comparaison \textit{before/after}.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+% TODO : insérer un schéma des 3 modules (O-PAGe / M-PAGe / I-PAGe)
+\fbox{\begin{minipage}{0.88\textwidth}\centering\vspace{2.5cm}\textit{[Schéma de l'architecture à 3 modules PAGe --- à insérer]}\vspace{2.5cm}\end{minipage}}
+\caption{Architecture modulaire de la PAGe Platform}
+\end{figure}
+
+% ----------------------------------------------------------
+\subsection{Problématique}
+En l'absence d'un cadre commun et outillé, l'évaluation des risques algorithmiques dans le secteur public demeure souvent subjective, fragmentée et difficilement comparable d'une institution à une autre. Les évaluations existantes reposent sur des appréciations qualitatives hétérogènes, peu reproductibles, et rarement reliées à une analyse de la capacité réelle de l'organisation à atténuer ces risques. Il en résulte une difficulté à :
+\begin{itemize}
+    \item prioriser les actions correctives ;
+    \item suivre l'évolution des risques dans le temps ;
+    \item mesurer l'efficacité effective des politiques de mitigation ;
+    \item comparer objectivement la maturité de différentes institutions.
+\end{itemize}
+
+La problématique du projet peut ainsi se formuler : \textit{comment concevoir et développer une plateforme permettant d'évaluer de façon systématique, objective et comparable les risques de la gouvernance algorithmique publique, d'apprécier la capacité institutionnelle de mitigation, et de simuler l'impact des mécanismes de réduction des risques afin d'éclairer la prise de décision ?}
+
+% ----------------------------------------------------------
+\subsection{Objectifs du projet}
+\noindent\textbf{Objectif général.}\quad Concevoir et réaliser la PAGe Platform en tant qu'outil opérationnel de gouvernance des risques algorithmiques, couvrant l'évaluation de la gravité des risques, l'appréciation des capacités de mitigation et la simulation d'impact.
+
+\vspace{0.3cm}
+\noindent\textbf{Objectifs spécifiques.}\quad Le projet est mené par deux binômes. Le présent rapport rend compte du travail du \textbf{Binôme~1} (Oussama AIT ELKABIR et Akram AL OUMAMI), dont les objectifs spécifiques sont :
+\begin{itemize}
+    \item développer intégralement le module \textbf{O-PAGe} (back-end et front-end) : gestion des risques et des indicateurs, saisie et normalisation des valeurs, calcul pondéré du \textit{Risk Score} et catégorisation (Low / Moderate / High / Critical), affichage par tableau de bord ;
+    \item concevoir et implémenter la base de données du module O-PAGe ;
+    \item développer la partie \textbf{front-end du module I-PAGe} : interface de simulation, visualisation \textit{before/after}, interactions utilisateur ;
+    \item contribuer aux livrables communs : architecture globale, diagrammes UML, modèle de données, tests d'intégration et démonstration finale.
+\end{itemize}
+
+% ----------------------------------------------------------
+\subsection{Périmètre et répartition du travail}
+Le projet global couvre l'ensemble de la plateforme PAGe : deux back-ends Django (O-PAGe et M-PAGe), un front-end React/Vite, une base de données PostgreSQL partagée et une orchestration Docker. La répartition entre les deux binômes est synthétisée dans le tableau suivant.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}p{0.22\textwidth}p{0.70\textwidth}@{}}
+\hline
+\textbf{Responsable} & \textbf{Périmètre} \\
+\hline
+\textbf{Binôme 1}\newline (AIT ELKABIR,\newline AL OUMAMI) &
+    Module O-PAGe complet (back-end + front-end) : gestion des risques, indicateurs, Risk Score.\newline
+    Front-end du module I-PAGe : interface de simulation, visualisation before/after.\newline
+    Base de données O-PAGe et diagramme de classes associé. \\
+\hline
+\textbf{Binôme 2}\newline (ABBAR, LABHAL) &
+    Module M-PAGe complet (back-end + front-end) : KP, dimensions, facteurs, items, calcul RL/RMMC/RMC/GPM.\newline
+    Back-end du module I-PAGe : matrice d'impact, calcul d'efficacité des RMM, logique de simulation.\newline
+    Base de données M-PAGe et diagramme de classes associé. \\
+\hline
+\textbf{Travail commun} &
+    Conception globale (architecture, UML, base de données).\newline
+    Tests d'intégration, correction d'anomalies.\newline
+    Préparation de la démonstration et du rapport final. \\
+\hline
+\end{tabular}
+\caption{Répartition du travail entre les deux binômes}
+\end{table}
+
+% ----------------------------------------------------------
+\subsection{Méthodologie de travail}
+Le projet a été conduit selon une démarche \textbf{itérative et incrémentale}, structurée en trois grands lots conformément au découpage défini par l'encadrant :
+
+\begin{itemize}
+    \item \textbf{Lot 1 --- Analyse et conception :} clarification du besoin, rédaction des cas d'usage, modélisation UML, conception des interfaces, conception de la base de données, définition des règles de calcul.
+    \item \textbf{Lot 2 --- Développement :} réalisation du back-end, réalisation du front-end, implémentation des calculs analytiques, intégration de la base de données.
+    \item \textbf{Lot 3 --- Tests, intégration et soutenance :} tests unitaires et d'intégration, stabilisation, préparation de la démonstration, documentation technique et utilisateur.
+\end{itemize}
+
+Cette structuration a permis de valider chaque lot avant de passer au suivant, tout en ménageant des itérations à l'intérieur de chaque lot (revues avec l'encadrant, builds réguliers, tests d'intégration).
+
+% ----------------------------------------------------------
+\subsection{Planning prévisionnel}
+Le projet a été planifié sur une durée d'environ \textbf{trois mois} (douze semaines). Le tableau suivant synthétise les principales phases.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.16\textwidth}p{0.62\textwidth}p{0.14\textwidth}@{}}
+\hline
+\textbf{Période} & \textbf{Activités principales} & \textbf{Lot} \\
+\hline
+Semaine 1 & Lecture détaillée du besoin, cadrage fonctionnel, identification des acteurs et des modules, répartition des tâches, élaboration du diagramme de cas d'usage et rédaction des scénarios d'usage. & Lot 1 \\
+\hline
+Semaines 2--3 & Diagramme de classes, définition préliminaire de la base de données, maquettage des interfaces, spécification des API, validation de l'architecture logicielle. & Lot 1 \\
+\hline
+Semaines 4--5 & Configuration de la base de données, développement de l'authentification, développement du module O-PAGe : saisie des indicateurs, normalisation, calcul du Risk Score, affichage des niveaux. & Lot 2 \\
+\hline
+Semaines 6--7 & Développement du module M-PAGe : gestion des KP, dimensions, facteurs et items ; calcul des RL, RMMC, RMC et GPM. & Lot 2 \\
+\hline
+Semaines 8--9 & Développement du module I-PAGe : matrice d'impact, calcul d'efficacité des RMM, recalcul des indicateurs et du Risk Score à $t+1$. & Lot 2 \\
+\hline
+Semaines 9--10 & Intégration des trois modules, cohérence des écrans et navigation, tests unitaires et d'intégration, correction d'anomalies. & Lot 3 \\
+\hline
+Semaine 11 & Tableaux de bord, exports PDF/Excel, documentation technique. & Lot 3 \\
+\hline
+Semaine 12 & Recette finale, préparation de la soutenance et de la démonstration, finalisation du rapport. & Lot 3 \\
+\hline
+\end{tabular}
+\caption{Planning prévisionnel du projet sur douze semaines}
+\end{table}
+
+\begin{figure}[H]
+\centering
+% TODO : insérer le diagramme de Gantt (image Overleaf)
+\fbox{\begin{minipage}{0.9\textwidth}\centering\vspace{2.5cm}\textit{[Diagramme de Gantt --- à insérer]}\vspace{2.5cm}\end{minipage}}
+\caption{Diagramme de Gantt du projet}
+\end{figure}
+
+% ----------------------------------------------------------
+\subsection{Organisation du rapport}
+Outre le présent chapitre introductif, ce rapport est organisé comme suit :
+\begin{itemize}
+    \item \textbf{Chapitre 2 --- Cadre conceptuel et méthodologique :} définitions formelles des concepts fondamentaux (risque algorithmique, indicateur, RMM, pilier, maturité) et présentation détaillée des trois modules de la plateforme avec leurs formules de calcul.
+    \item \textbf{Chapitre 3 --- Analyse et spécification :} identification des acteurs, besoins fonctionnels et non fonctionnels, cas d'utilisation.
+    \item \textbf{Chapitre 4 --- Conception :} architecture technique, modélisation UML (cas d'utilisation, classes, séquences), modélisation de la base de données (MCD/MLD), choix technologiques.
+    \item \textbf{Chapitre 5 --- Réalisation :} implémentation des modules O-PAGe et I-PAGe (front-end), API, authentification, orchestration Docker, fonctions d'export.
+    \item \textbf{Chapitre 6 --- Tests et validation :} stratégie de test, vérification des calculs, résultats obtenus.
+    \item \textbf{Conclusion générale et perspectives.}
+\end{itemize}
+
+% ----------------------------------------------------------
+\subsection{Conclusion}
+Ce premier chapitre a permis de situer le projet dans le contexte de la gouvernance des risques algorithmiques dans le secteur public, de formuler la problématique à laquelle répond la PAGe Platform et de préciser les objectifs, le périmètre et la méthodologie du projet. Le chapitre suivant établit le cadre conceptuel et méthodologique qui fonde l'ensemble de la démarche et définit les formules de calcul des différents scores de la plateforme.
+
+% ==========================
+\section{Analyse}
+\subsection{Analyse de l'existant}
+L'analyse initiale a porté sur l'ensemble du projet : deux applications backend Django (OPAGe et M-PAGe), un frontend React/Vite, des scripts SQL, et une orchestration Docker comprenant PostgreSQL et pgAdmin. Le projet était organisé en deux dossiers principaux, ce qui nécessitait une vision globale pour éviter les conflits et garantir la qualité du rapport.
+
+\subsection{Besoins fonctionnels}
+Les besoins fonctionnels identifiés sont :
+\begin{itemize}
+    \item gestion des campagnes d'évaluation ;
+    \item création et modification des mécanismes de mitigation ;
+    \item gestion des risques O-PAGe ;
+    \item consultation des résultats d'audit et comparaison des campagnes ;
+    \item export de rapports en PDF et Excel.
+\end{itemize}
+
+\subsection{Besoins non fonctionnels}
+Les besoins non fonctionnels comprennent :
+\begin{itemize}
+    \item internationalisation de l'interface ;
+    \item maintenabilité du code TypeScript ;
+    \item performance du rendu côté client ;
+    \item cohérence visuelle et ergonomie.
+\end{itemize}
+
+\subsection{Spécification des exigences}
+La solution devait conserver l'architecture React + Vite, assurer la compatibilité avec le backend Django, et traduire en anglais tous les éléments visibles par l'utilisateur sans modifier les endpoints backend.
+
+\subsection{Cas d'utilisation}
+Les principaux cas d'utilisation sont :
+\begin{itemize}
+    \item authentification et redirection par rôle ;
+    \item création, édition et suppression de mécanismes ;
+    \item saisie du questionnaire d'évaluation ;
+    \item consultation des résultats de campagne ;
+    \item export de rapports.
+\end{itemize}
+
+% ==========================
+\section{Conception}
+\subsection{Architecture générale du système}
+La plateforme repose sur un frontend React 18 avec Vite pour le build et un backend Django exposant des API REST. Le frontend utilise un service API centralisé pour toutes les communications avec le backend.
+
+\subsection{Architecture frontend}
+Le frontend est organisé en modules par rôle : administrateur, manager, auditeur et gestionnaire de risques. Les composants utilisent Tailwind CSS et Radix UI pour l'interface.
+
+\subsection{Architecture backend}
+Le backend Django gère les modèles de données, l'authentification, les rôles utilisateurs et les endpoints pour les campagnes, mécanismes, risques et rapports.
+
+\subsection{Modèle de données}
+Le modèle de données couvre les entités suivantes : utilisateur, campagne, mécanisme, pilier, dimension, facteur, item et réponse. Les relations structurent les évaluations et les résultats par pilier.
+
+\subsection{Modélisation UML}
+La modélisation UML comprend :
+\begin{itemize}
+    \item diagramme de cas d'utilisation ;
+    \item diagramme de classes.
+\end{itemize}
+Ces diagrammes décrivent les interactions majeures entre les rôles et les services du système.
+
+\subsection{Modélisation conceptuelle et logique}
+Le MCD représente les entités métiers et leurs relations, tandis que le MLD traduit ce modèle en tables et clés pour la base de données. Cette modélisation permet de clarifier l'architecture des données.
+
+\subsection{Choix technologiques}
+Les technologies retenues sont :
+\begin{itemize}
+    \item React 18 + TypeScript pour le frontend ;
+    \item Vite 6.3.5 pour le bundler ;
+    \item Tailwind CSS 4 pour le style ;
+    \item Django pour le backend ;
+    \item jsPDF et XLSX pour l'export de rapports ;
+    \item Recharts pour les visualisations.
+\end{itemize}
+
+% ==========================
+\section{Réalisation}
+\subsection{Environnement de développement}
+L'environnement de développement comprend Node.js, npm, Vite et un backend Django local. Les dépendances frontend sont gérées par package.json.
+
+\subsection{Structure du projet}
+Le projet est structuré comme suit :
+\begin{itemize}
+    \item \texttt{src/main.tsx} : point d'entrée React ;
+    \item \texttt{src/routes.tsx} : définition des routes ;
+    \item \texttt{src/app/pages} : pages par rôle ;
+    \item \texttt{src/app/components} : composants réutilisables ;
+    \item \texttt{src/app/services/api.ts} : service API ;
+    \item \texttt{src/app/context} : gestion de l'authentification.
+\end{itemize}
+
+\subsection{Implémentation frontend}
+L'implémentation a couvert le développement des pages métier et des composants critiques, la gestion des formulaires, la navigation par rôle et l'intégration des services API. Les pages réalisées incluent :
+\begin{itemize}
+    \item gestion des mécanismes ;
+    \item tableau de bord administrateur ;
+    \item questionnaire manager ;
+    \item analyse auditeur ;
+    \item gestion des risques O-PAGe.
+\end{itemize}
+
+\subsection{Implémentation backend}
+Le projet comprend deux backends Django distincts : un backend O-PAGe et un backend M-PAGe. Chacun fournit des endpoints API nécessaires pour les fonctionnalités métier et les flux de données. L'effort a consisté à assurer la communication fiable entre le frontend React et ces backends, ainsi qu'à structurer les modèles de données pour les campagnes, mécanismes et risques.
+
+\subsection{API et services}
+Le service \texttt{api.ts} centralise les requêtes HTTP et offre des interfaces typées vers : authApi, campaignsApi, opageApi, rmmsApi, pillarsApi, dimensionsApi, factorsApi, itemsApi et responsesApi.
+
+\subsection{Dockerisation et orchestration}
+Le projet utilise une orchestration Docker définie dans un fichier \texttt{docker-compose.yml} à la racine. Cette orchestration comprend :
+\begin{itemize}
+    \item un service PostgreSQL ;
+    \item un service pgAdmin pour l'administration de la base ;
+    \item un backend Django O-PAGe ;
+    \item un backend Django M-PAGe ;
+    \item un frontend React/Vite.
+\end{itemize}
+La configuration permet de démarrer l'ensemble des services en conteneurs et de maintenir une architecture cohérente pour le développement et le déploiement.
+
+\subsection{Sécurité et authentification}
+La plateforme utilise un contexte d'authentification React, qui gère l'état utilisateur et protège les routes selon les rôles. L'accès aux pages est conditionné à la connexion et au rôle de l'utilisateur.
+
+\subsection{Fonctions d'export / reporting}
+Des fonctionnalités d'export au format PDF et Excel ont été intégrées pour permettre l'extraction des résultats de campagne et des analyses métier.
+
+% ==========================
+\section{Tests et validation}
+\subsection{Stratégie de test}
+La stratégie s'est appuyée sur des tests de build, des vérifications manuelles des pages et des audits de texte.
+
+\subsection{Tests fonctionnels}
+Les cas fonctionnels ont couvert :
+\begin{itemize}
+    \item connexion et redirection par rôle ;
+    \item création et édition de mécanismes ;
+    \item consultation des résultats ;
+    \item comparaison de campagnes ;
+    \item export de rapports.
+\end{itemize}
+
+\subsection{Tests techniques / build}
+Le build Vite a été exécuté avec succès, attestant de l'absence d'erreurs de compilation dans le frontend. Une vérification de l'architecture Docker et des backends Django a également été réalisée pour confirmer la cohérence des services et la disponibilité des endpoints API.
+
+\subsection{Résultats obtenus}
+Le projet a abouti à une application complète et opérationnelle, comprenant le frontend React, les backends Django et l'infrastructure Docker avec PostgreSQL. Les workflows métiers sont disponibles pour la gestion des campagnes, des mécanismes et des risques.
+
+\subsection{Difficultés rencontrées}
+Les principales difficultés ont été la localisation des chaînes françaises dispersées et la gestion des doublons textuels dans plusieurs composants.
+
+\subsection{Corrections apportées}
+Des révisions successives ont permis d'éliminer tous les restes de textes français et d'améliorer la cohérence terminologique du projet.
+
+% ==========================
+\section{Conclusion et perspectives}
+\subsection{Conclusion générale}
+Ce PFA a permis de développer une application M-PAGe complète, incluant la conception, le frontend, les backends, la modélisation des données et le déploiement Docker. Le résultat offre une solution cohérente pour la gestion des risques, des campagnes d'évaluation et des mécanismes de mitigation.
+
+\subsection{Bilan du projet}
+Le travail a permis de livrer une solution stable, bien structurée et alignée avec les besoins métiers : gestion des campagnes, analyse des risques et reporting.
+
+\subsection{Perspectives d'évolution}
+Les pistes d'évolution sont :
+\begin{itemize}
+    \item mise en place d'une infrastructure i18n ;
+    \item ajout de tests automatisés ;
+    \item amélioration du backend pour les messages d'erreur en anglais ;
+    \item optimisation des performances.
+\end{itemize}
+
+\subsection{Recommandations}
+Il est recommandé de poursuivre par une phase de tests utilisateurs, d'ajouter une documentation en anglais et de mettre en place une CI pour vérifier la qualité du code.
+
+% ==========================
+\section{Annexes}
+\subsection{Annexe A : Glossaire}
+\begin{itemize}
+    \item PAGe : Gouvernance Algorithmique Publique (\textit{Public Algorithmic Governance})
+    \item O-PAGe : module d'évaluation de la gravité des risques (Observatoire PAGe)
+    \item M-PAGe : module d'évaluation de la capacité de mitigation
+    \item I-PAGe : module d'analyse d'impact et de simulation
+    \item Risk Score : score de gravité d'un risque, obtenu par agrégation pondérée des indicateurs normalisés
+    \item Indicateur : variable quantifiable et observable mesurant un aspect d'un risque
+    \item RMM : \textit{Risk Mitigation Mechanism} --- mécanisme de mitigation des risques
+    \item KP : \textit{Key Pillar} --- pilier clé de gouvernance (Governance, Organizational, Legal, Technical, Human, Financial)
+    \item RL : \textit{Readiness Level} --- niveau de préparation d'un pilier ($RL \in [0,1]$)
+    \item RMMC : \textit{Risk Mitigation Mechanism Capacity} --- capacité réelle d'un mécanisme de mitigation
+    \item RMC : \textit{Risk Mitigation Capacity} --- capacité de mitigation associée à un risque
+    \item GPM : \textit{Global PAGe Maturity} --- maturité globale PAGe
+\end{itemize}
+
+\subsection{Annexe B : Diagrammes UML}
+Diagrammes de cas d'utilisation et diagramme de classes réalisés pour le projet.
+
+\subsection{Annexe C : MCD / MLD}
+Modèle conceptuel et modèle logique de données décrivant les entités et leurs relations.
+
+\subsection{Annexe D : Extraits de code}
+Extraits de code significatifs et descriptions des fichiers clés du projet.
+
+\subsection{Annexe E : Liste des figures}
+Liste des figures présentes dans le rapport.
+
+\subsection{Annexe F : Liste des tableaux}
+Liste des tableaux présents dans le rapport.
+
+\end{document}
