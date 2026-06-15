@@ -68,23 +68,23 @@
 
 \newcommand{\fairepagedegarde}{
 \begin{titlepage}
-\ThisCenterWallPaper{1}{logos/background.png}
+\ThisCenterWallPaper{1}{Logos/background.png}
     
     %\vspace{-2cm}
-    %\includegraphics[width=0.2\textwidth]{logos/um5.png}
+    %\includegraphics[width=0.2\textwidth]{Logos/um5.png}
     %\hfill
     \centering %Centraliser le contenu
     %\hspace{-2cm}
-    \includegraphics[width=0.25\textwidth]{logos/ensias.png}\hfill
-    \includegraphics[width=0.3\textwidth]{logos/um5.png}\par\vspace{1cm} %Insertion du logo
-    {\scshape\LARGE École Nationale Supérieure d'Informatique et d'Analyse des Systèmes\par} %Nom de l'université
-    \vspace{1.5cm}%Espace de 1,5cm
+    \includegraphics[width=0.25\textwidth]{Logos/ensias.png}\hfill
+    \includegraphics[width=0.3\textwidth]{Logos/um5.png}\par\vspace{1cm} %Insertion du logo
+    {\scshape\large École Nationale Supérieure d'Informatique et d'Analyse des Systèmes\par} %Nom de l'université
+    \vspace{1cm}%Espace de 1,5cm
     {\scshape\Large \UE \par \sujet \par} %sous-titre
     \vspace{1cm}%Espace de 1cm
     \rule{\linewidth}{0.2 mm} \par \vspace{0.4cm}
     {\huge\bfseries \titre \par}
     \rule{\linewidth}{0.2 mm} \par \vspace{1.5cm}
-    \vspace{0cm}
+    \vspace{-1.2cm}
     
     \begin{minipage}{0.45\textwidth}
         \begin{flushleft} \large
