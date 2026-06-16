@@ -1,63 +1,60 @@
 \chapter{Cadre conceptuel et méthodologique}
 
 \section{Introduction}
-Ce chapitre présente le cadre théorique sur lequel repose la PAGe Platform. Nous définissons d'abord les concepts clés (risque algorithmique, indicateur, mécanisme de mitigation, pilier de gouvernance), puis nous détaillons les formules de calcul utilisées dans chacun des trois modules : O-PAGe pour la mesure de la gravité, M-PAGe pour l'évaluation de la capacité de mitigation, et I-PAGe pour la simulation d'impact.
+La PAGe Platform repose sur un cadre conceptuel et des règles de calcul qui ont été définis par notre encadrant, Pr. B. BOUNABAT. Ce cadre établit les concepts (risque, indicateur, mécanisme, pilier, maturité) et les formules d'agrégation utilisées dans les trois modules de la plateforme.
 
-Ces formules constituent le socle analytique de la plateforme. Elles ont été définies par l'encadrant dans le document de cadrage du projet, et notre travail a consisté à les implémenter fidèlement dans le code.
+Notre rôle n'a pas été de concevoir ces formules, mais de les comprendre et de les implémenter dans l'application. Ce chapitre les présente telles qu'elles nous ont été fournies, afin que le lecteur puisse comprendre la logique de calcul derrière chaque score affiché par la plateforme.
 
 % ================================================================
 \section{Concepts fondamentaux}
 
 \subsection{Risque algorithmique}
-Un risque algorithmique désigne tout effet indésirable pouvant résulter de l'utilisation d'un algorithme dans un processus décisionnel ou opérationnel d'une administration publique. Il peut s'agir de biais discriminatoires, d'opacité des décisions, de fragmentation de l'information entre administrations, ou d'incohérences entre les règles administratives et le comportement réel de l'algorithme.
+Un risque algorithmique désigne tout effet indésirable pouvant résulter de l'utilisation d'un algorithme dans un processus décisionnel d'une administration publique. Exemples : biais discriminatoires, opacité des décisions, fragmentation de l'information entre administrations.
 
-Dans la PAGe Platform, chaque risque est considéré comme une unité analytique autonome. Il est identifié, nommé et suivi indépendamment des autres, ce qui permet une évaluation fine et contextualisée.
+Dans la plateforme, chaque risque est une unité analytique autonome, identifiée et suivie indépendamment.
 
 \subsection{Indicateur}
-Un indicateur est une variable quantifiable et observable qui mesure un aspect précis d'un risque. Par exemple : le taux d'intégration des bases de données publiques, le nombre de recours contre des décisions automatisées, ou le niveau de documentation des modèles utilisés.
+Un indicateur est une variable quantifiable qui mesure un aspect d'un risque. Par exemple : le taux d'intégration des bases de données, le nombre de recours contre des décisions automatisées, le niveau de documentation des modèles.
 
-Chaque indicateur possède les propriétés suivantes :
+Chaque indicateur possède :
 \begin{itemize}
-    \item une \textbf{valeur brute} ($Val_{Ind_i}$) : la valeur renseignée par l'utilisateur via la plateforme ;
-    \item un \textbf{poids} ($W_{Ind_i}$) : reflétant l'importance relative de l'indicateur par rapport au risque, avec $\sum W_{Ind_i} = 1$ ;
-    \item un \textbf{statut} : POSITIVE, NEGATIVE ou SPECIAL, qui détermine la logique de normalisation ;
-    \item une \textbf{valeur min} et une \textbf{valeur max} : les bornes de l'échelle de mesure.
+    \item une \textbf{valeur brute} ($Val_{Ind_i}$) : renseignée par l'utilisateur ;
+    \item un \textbf{poids} ($W_{Ind_i}$) : importance relative, avec $\sum W_{Ind_i} = 1$ ;
+    \item un \textbf{statut} : POSITIVE, NEGATIVE ou SPECIAL ;
+    \item une \textbf{plage} : valeur min et valeur max.
 \end{itemize}
 
 \subsection{Mécanisme de mitigation (RMM)}
-Un RMM (\textit{Risk Mitigation Mechanism}) est un levier opérationnel concret permettant de réduire un risque. Exemples : l'interopérabilité sémantique et technique, l'audit algorithmique indépendant, l'encadrement juridique, la formation des agents, etc.
+Un RMM (\textit{Risk Mitigation Mechanism}) est un levier concret pour réduire un risque : audit algorithmique indépendant, interopérabilité technique, encadrement juridique, formation des agents, etc.
 
-Chaque mécanisme est évalué selon sa capacité réelle d'activation dans un contexte institutionnel donné. Cette capacité dépend du niveau de préparation de l'organisation sur différents piliers.
+Chaque mécanisme est évalué selon sa capacité réelle d'activation, qui dépend de la préparation de l'organisation sur différents piliers.
 
 \subsection{Piliers de gouvernance (Key Pillars)}
-Les piliers clés représentent les fondements institutionnels nécessaires à l'activation des mécanismes de mitigation. La PAGe Platform en définit six :
+Les piliers représentent les fondements institutionnels nécessaires à l'activation des mécanismes. La plateforme en définit six :
 \begin{itemize}
     \item \textbf{Governance} : cadre décisionnel et stratégique ;
     \item \textbf{Organizational} : capacités organisationnelles ;
     \item \textbf{Legal} : cadre juridique et réglementaire ;
     \item \textbf{Technical} : infrastructure technique ;
-    \item \textbf{Human} : capacités humaines et compétences ;
-    \item \textbf{Financial} : ressources financières disponibles.
+    \item \textbf{Human} : compétences humaines ;
+    \item \textbf{Financial} : ressources financières.
 \end{itemize}
 
-Chaque pilier est évalué via un niveau de préparation appelé \textit{Readiness Level} (RL), avec $RL_i \in [0, 1]$.
+Chaque pilier est évalué via un \textit{Readiness Level} (RL), avec $RL_i \in [0, 1]$.
 
 \subsection{Dimensions, Facteurs et Items}
 Chaque pilier est décomposé en :
 \begin{itemize}
-    \item \textbf{Dimensions} : axes opérationnels permettant une lecture fine des capacités existantes ;
-    \item \textbf{Facteurs} : sous-décomposition des dimensions permettant d'identifier les forces et faiblesses institutionnelles ;
-    \item \textbf{Items} : questions concrètes posées aux responsables institutionnels via un questionnaire. Les réponses sont ordinales (de 1 à 5), ce qui permet une quantification homogène.
+    \item \textbf{Dimensions} : axes opérationnels ;
+    \item \textbf{Facteurs} : sous-décomposition des dimensions ;
+    \item \textbf{Items} : questions concrètes posées via un questionnaire, avec des réponses de 1 à 5.
 \end{itemize}
 
 % ================================================================
 \section{Module O-PAGe : mesure de la gravité des risques}
 
-\subsection{Principe}
-Le module O-PAGe mesure la gravité d'un risque à travers ses indicateurs. Chaque indicateur est normalisé puis agrégé par pondération pour produire un score global : le \textit{Risk Score}.
-
 \subsection{Normalisation des indicateurs}
-La valeur normalisée d'un indicateur dépend de son statut :
+La valeur normalisée dépend du statut de l'indicateur :
 
 $$
 Val^{norm}_{Ind_i} = \begin{cases}
@@ -69,35 +66,24 @@ $$
 
 Avec $Val^{norm}_{Ind_i} \in [0, 1]$.
 
-\textbf{Explication :}
-\begin{itemize}
-    \item Un indicateur \textbf{POSITIVE} signifie que plus la valeur est élevée, plus le risque est élevé (ex : taux d'erreur). La valeur brute est utilisée directement.
-    \item Un indicateur \textbf{NEGATIVE} signifie que plus la valeur est élevée, moins le risque est élevé (ex : taux de conformité). On inverse la valeur.
-    \item Un indicateur \textbf{SPECIAL} utilise une valeur définie manuellement par l'expert.
-\end{itemize}
+Un indicateur POSITIVE : plus la valeur est élevée, plus le risque est élevé. Un indicateur NEGATIVE : c'est l'inverse.
 
 \subsection{Calcul du Risk Score}
-Le score de gravité d'un risque est obtenu par agrégation pondérée de ses indicateurs normalisés :
+Le score de gravité est l'agrégation pondérée des indicateurs normalisés :
 
 $$
 Risk\_Score = \sum_{i} W_{Ind_i} \cdot Val^{norm}_{Ind_i}
 $$
 
-Avec :
-\begin{itemize}
-    \item $W_{Ind_i}$ : poids de l'indicateur $i$ ;
-    \item $\sum_{i} W_{Ind_i} = 1$ (les poids sont normalisés).
-\end{itemize}
+Avec $\sum_{i} W_{Ind_i} = 1$. Le résultat est entre 0 et 1.
 
-Le Risk Score est donc un nombre entre 0 et 1.
-
-\subsection{Catégorisation du risque}
-Le score est traduit en niveaux qualitatifs pour faciliter la prise de décision :
+\subsection{Catégorisation}
+Le score est traduit en niveaux :
 
 \begin{table}[h!]
 \centering
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}p{0.25\textwidth}p{0.35\textwidth}p{0.30\textwidth}@{}}
+\begin{tabular}{@{}p{0.20\textwidth}p{0.35\textwidth}p{0.35\textwidth}@{}}
 \hline
 \textbf{Catégorie} & \textbf{Condition} & \textbf{Signification} \\
 \hline
@@ -113,109 +99,83 @@ Critical & $Risk\_Score \geq 0.75$ & Situation préoccupante \\
 \caption{Catégorisation du Risk Score}
 \end{table}
 
-\subsection{Exemple numérique}
-Prenons un risque avec 3 indicateurs :
+\subsection{Exemple}
+Un risque avec 3 indicateurs :
 
 \begin{table}[h!]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lcccc@{}}
 \hline
-\textbf{Indicateur} & \textbf{Valeur brute} & \textbf{Statut} & \textbf{Valeur norm.} & \textbf{Poids} \\
+\textbf{Indicateur} & \textbf{Valeur brute} & \textbf{Statut} & \textbf{Val. norm.} & \textbf{Poids} \\
 \hline
 Taux d'erreur & 0.60 & POSITIVE & 0.60 & 0.40 \\
 Taux de conformité & 0.80 & NEGATIVE & 0.20 & 0.35 \\
 Opacité & 0.50 & POSITIVE & 0.50 & 0.25 \\
 \hline
 \end{tabular}
-\caption{Exemple de calcul du Risk Score}
+\caption{Exemple d'indicateurs}
 \end{table}
 
 $$
-Risk\_Score = (0.40 \times 0.60) + (0.35 \times 0.20) + (0.25 \times 0.50) = 0.24 + 0.07 + 0.125 = 0.435
+Risk\_Score = (0.40 \times 0.60) + (0.35 \times 0.20) + (0.25 \times 0.50) = 0.435
 $$
 
-Résultat : \textbf{Moderate} (entre 0.25 et 0.50).
+Résultat : \textbf{Moderate}.
 
 % ================================================================
 \section{Module M-PAGe : mesure de la capacité de mitigation}
 
-\subsection{Principe}
-Le module M-PAGe évalue la capacité d'une organisation à atténuer ses risques algorithmiques. L'évaluation se fait via des questionnaires dont les réponses sont agrégées de manière progressive : Items → Facteurs → Dimensions → Piliers → Mécanismes → Risques → Score global.
-
 \subsection{Agrégation multiniveau}
-Les réponses aux items sont des valeurs ordinales de 1 à 5 :
-$$
-Val_{Item} \in \{1, 2, 3, 4, 5\}
-$$
+Les réponses aux items sont de 1 à 5 : $Val_{Item} \in \{1, 2, 3, 4, 5\}$
 
-L'agrégation suit les étapes suivantes :
+L'agrégation se fait en plusieurs étapes :
 
 \vspace{0.3cm}
-\noindent\textbf{Score facteur normalisé :}
+
+oindent\textbf{Score facteur normalisé :}
 $$
 Val\_Fact\_Norm = \frac{Avg(Val_{Item}) - 1}{4}
 $$
 
-Cette formule ramène la moyenne des items (entre 1 et 5) à une valeur entre 0 et 1.
-
-\vspace{0.3cm}
-\noindent\textbf{Score dimension :}
+oindent\textbf{Score dimension :}
 $$
 Val\_Dim = Avg(Val\_Fact\_Norm)
 $$
 
-\vspace{0.3cm}
-\noindent\textbf{Niveau de préparation du pilier (Readiness Level) :}
+oindent\textbf{Readiness Level du pilier :}
 $$
 RL_i = Avg(Val\_Dim)
 $$
 
-Avec $RL_i \in [0, 1]$.
-
 \subsection{Capacité d'un mécanisme (RMMC)}
-La capacité d'un mécanisme de mitigation $j$ est calculée comme une agrégation pondérée des niveaux de préparation des piliers :
-
 $$
 RMMC_j = \sum_{i} W_{KP_{ji}} \cdot RL_i
 $$
 
-Avec :
-\begin{itemize}
-    \item $RL_i$ : niveau de préparation du pilier $KP_i$ ;
-    \item $W_{KP_{ji}}$ : poids du pilier $i$ dans le mécanisme $j$ ;
-    \item $\sum_{i} W_{KP_{ji}} = 1$.
-\end{itemize}
+Avec $\sum_{i} W_{KP_{ji}} = 1$.
 
 \subsection{Capacité par risque (RMC)}
-La capacité de mitigation associée à un risque $k$ est :
-
 $$
 RMC_k = \sum_{j} W_{RMM_{kj}} \cdot RMMC_j
 $$
 
-Avec $\sum_{j} W_{RMM_{kj}} = 1$.
-
 \subsection{Maturité globale (GPM)}
-Le score de maturité global de l'organisation est :
-
 $$
 GPM = \sum_{k} W_{Risk_k} \cdot RMC_k
 $$
 
-Avec $\sum_{k} W_{Risk_k} = 1$.
+Le GPM synthétise la capacité globale de l'organisation face à l'ensemble de ses risques.
 
-Le GPM est un indicateur stratégique qui synthétise la capacité globale de l'organisation face à l'ensemble de ses risques algorithmiques.
-
-\subsection{Exemple numérique}
-Prenons un mécanisme qui dépend de 3 piliers :
+\subsection{Exemple}
+Un mécanisme qui dépend de 3 piliers :
 
 \begin{table}[h!]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}lccc@{}}
 \hline
-\textbf{Pilier} & \textbf{RL} & \textbf{Poids dans le RMM} & \textbf{Contribution} \\
+\textbf{Pilier} & \textbf{RL} & \textbf{Poids} & \textbf{Contribution} \\
 \hline
 Governance & 0.70 & 0.40 & 0.280 \\
 Technical & 0.55 & 0.35 & 0.193 \\
@@ -224,93 +184,62 @@ Human & 0.60 & 0.25 & 0.150 \\
 \multicolumn{3}{@{}l}{\textbf{RMMC}} & \textbf{0.623} \\
 \hline
 \end{tabular}
-\caption{Exemple de calcul du RMMC}
+\caption{Exemple de calcul RMMC}
 \end{table}
 
 % ================================================================
 \section{Module I-PAGe : simulation d'impact}
 
-\subsection{Principe}
-Le module I-PAGe évalue l'impact réel du déploiement des mécanismes de mitigation sur les indicateurs de risque. Il permet de répondre à la question : « si on déploie tel mécanisme, de combien le risque diminue-t-il ? »
-
 \subsection{Matrice d'impact}
-La relation entre mécanismes et indicateurs est formalisée par une matrice d'impact :
-
+La relation entre mécanismes et indicateurs est formalisée par :
 $$
 Mat\_RMM\_Ind = M\_Impact
 $$
 
-Les lignes représentent les RMM, les colonnes représentent les indicateurs, et chaque valeur $M\_Impact_{ijk}$ traduit l'intensité de l'influence du mécanisme $RMM_j$ sur l'indicateur $Ind_k$ pour le risque $R_i$.
+Les lignes = RMM, les colonnes = indicateurs. Chaque valeur $M\_Impact_{ijk}$ traduit l'influence du mécanisme $j$ sur l'indicateur $k$ du risque $i$.
 
-\subsection{Efficacité réelle d'un mécanisme}
-L'efficacité effective d'un mécanisme est le produit de :
-\begin{itemize}
-    \item sa capacité intrinsèque ($RMMC_{ij}$) : ce qu'il \textit{peut} faire ;
-    \item son niveau réel de déploiement ($RMMD_{ij}$) : ce qu'il \textit{fait} effectivement.
-\end{itemize}
-
+\subsection{Efficacité réelle}
 $$
 Effi\_RMM_{ij} = RMMC_{ij} \times RMMD_{ij}
 $$
 
-Un mécanisme performant mais non déployé n'a aucun effet réel.
+C'est le produit de la capacité intrinsèque par le niveau de déploiement réel. Un mécanisme non déployé n'a aucun effet.
 
-\subsection{Évolution dynamique des indicateurs}
-L'impact des mécanismes sur les indicateurs est modélisé de manière dynamique :
-
+\subsection{Évolution des indicateurs}
 $$
 Ind_{ik}(t+1) = Ind_{ik}(t) - \sum_{j} M\_Impact_{ijk} \cdot Effi\_RMM_{ij}
 $$
 
-Chaque mécanisme déployé contribue à la réduction de certains indicateurs. L'effet global est la somme pondérée des contributions de tous les mécanismes activés.
-
-\subsection{Recalcul du Risk Score}
-À partir des nouvelles valeurs des indicateurs à $t+1$, on recalcule le Risk Score :
-
-$$
-Risk\_Score_i(t+1)
-$$
-
-Cela permet de :
-\begin{itemize}
-    \item suivre l'évolution des risques dans le temps ;
-    \item mesurer l'efficacité réelle des politiques de mitigation ;
-    \item comparer la situation \textit{before} et \textit{after} mitigation.
-\end{itemize}
+Chaque mécanisme déployé réduit certains indicateurs. On recalcule ensuite le $Risk\_Score(t+1)$ pour comparer avant/après.
 
 \subsection{Exemple}
-Si un indicateur vaut 0.60 à $t$, et qu'un seul mécanisme est déployé avec $M\_Impact = 0.3$ et $Effi\_RMM = 0.5$ :
-
+Un indicateur à 0.60, un mécanisme avec $M\_Impact = 0.3$ et $Effi\_RMM = 0.5$ :
 $$
-Ind(t+1) = 0.60 - (0.3 \times 0.5) = 0.60 - 0.15 = 0.45
+Ind(t+1) = 0.60 - (0.3 \times 0.5) = 0.45
 $$
-
-L'indicateur passe de 0.60 à 0.45 grâce au déploiement du mécanisme.
 
 % ================================================================
 \section{Synthèse}
-Le tableau suivant résume la chaîne de calcul complète de la PAGe Platform :
 
 \begin{table}[h!]
 \centering
 \renewcommand{\arraystretch}{1.4}
-\begin{tabular}{@{}p{0.15\textwidth}p{0.25\textwidth}p{0.50\textwidth}@{}}
+\begin{tabular}{@{}p{0.12\textwidth}p{0.25\textwidth}p{0.53\textwidth}@{}}
 \hline
-\textbf{Module} & \textbf{Score produit} & \textbf{Formule} \\
+\textbf{Module} & \textbf{Score} & \textbf{Formule} \\
 \hline
 O-PAGe & Risk Score & $\sum W_{Ind_i} \cdot Val^{norm}_{Ind_i}$ \\
 \hline
-M-PAGe & RL (pilier) & $Avg(Val\_Dim)$ \\
- & RMMC (mécanisme) & $\sum W_{KP_{ji}} \cdot RL_i$ \\
- & RMC (risque) & $\sum W_{RMM_{kj}} \cdot RMMC_j$ \\
- & GPM (global) & $\sum W_{Risk_k} \cdot RMC_k$ \\
+M-PAGe & RL & $Avg(Val\_Dim)$ \\
+ & RMMC & $\sum W_{KP_{ji}} \cdot RL_i$ \\
+ & RMC & $\sum W_{RMM_{kj}} \cdot RMMC_j$ \\
+ & GPM & $\sum W_{Risk_k} \cdot RMC_k$ \\
 \hline
-I-PAGe & Indicateur à $t+1$ & $Ind(t) - \sum M\_Impact \cdot Effi\_RMM$ \\
- & Risk Score à $t+1$ & Recalcul avec les nouveaux indicateurs \\
+I-PAGe & $Ind(t+1)$ & $Ind(t) - \sum M\_Impact \cdot Effi\_RMM$ \\
 \hline
 \end{tabular}
-\caption{Synthèse de la chaîne de calcul PAGe}
+\caption{Récapitulatif des formules}
 \end{table}
 
 \section{Conclusion}
-Ce chapitre a défini les concepts fondamentaux de la PAGe Platform et les formules de calcul qui fondent les trois modules. Ces formules constituent la logique métier que nous avons implémentée dans le code. Le chapitre suivant présente l'analyse des besoins et la conception de la plateforme.
+Ce chapitre a présenté les concepts et formules de calcul qui fondent la PAGe Platform. Ces règles, définies par l'encadrant, ont été directement implémentées dans le code de l'application. Le chapitre suivant traite de l'analyse des besoins et de la conception.
