@@ -5,32 +5,36 @@ Avant de passer au développement, nous avons mené une phase d'analyse pour ide
 
 % ================================================================
 \section{Identification des acteurs}
-La plateforme PAGe met en jeu cinq acteurs principaux, chacun avec un rôle distinct :
+La plateforme PAGe définit sept rôles distincts, chacun avec des accès spécifiques :
 
 \begin{table}[h!]
 \centering
 \renewcommand{\arraystretch}{1.4}
 \begin{tabular}{@{}p{0.28\textwidth}p{0.64\textwidth}@{}}
 \hline
-\textbf{Acteur} & \textbf{Rôle} \\
+\textbf{Acteur} & \textbf{Rôle dans la plateforme} \\
 \hline
-Administrateur & Gère les comptes utilisateurs et les organisations, attribue les rôles. \\
+Administrateur (System Admin) & Gère les comptes utilisateurs et attribue les rôles à chaque utilisateur. \\
 \hline
-Organisateur administratif & Configure les mécanismes (RMM), gère les poids des piliers, lance et suit les campagnes d'évaluation. \\
+Organisateur administratif & Configure le référentiel M-PAGe (piliers, dimensions, facteurs, items), gère les mécanismes de mitigation et leurs poids, lance et suit les campagnes d'évaluation, exporte les rapports. \\
 \hline
-Responsable organisationnel & Saisit les réponses d'évaluation (questionnaire M-PAGe), suit l'avancement des campagnes. \\
+Risk Manager & Gère les risques O-PAGe : création, édition et suppression des risques et de leurs indicateurs, suivi des scores de gravité. \\
 \hline
-Auditeur & Consulte et valide les résultats, analyse les tableaux de bord, exporte les rapports. \\
+Responsable organisationnel & Répond aux questionnaires d'évaluation M-PAGe, suit l'avancement des campagnes, participe aux simulations I-PAGe, exporte les rapports. \\
 \hline
-Décideur & Consulte les tableaux de bord, compare avant/après mitigation, utilise les simulations I-PAGe pour la prise de décision. \\
+Auditeur & Consulte les risques O-PAGe (lecture), analyse les résultats d'évaluation, effectue des comparaisons entre campagnes, exporte les rapports. \\
+\hline
+Décideur & Consulte les simulations I-PAGe, compare les scénarios avant/après mitigation, exporte les données. \\
+\hline
+Observateur & Accès en lecture seule : dashboard M-PAGe, résultats d'évaluation, analyse comparative, simulations I-PAGe, export. \\
 \hline
 \end{tabular}
-\caption{Acteurs de la PAGe Platform}
+\caption{Les sept acteurs de la PAGe Platform}
 \end{table}
 
 % ================================================================
 \section{Diagrammes de cas d'utilisation}
-Nous avons modélisé les cas d'utilisation par module. Chaque diagramme est suivi d'un tableau décrivant les cas d'utilisation principaux.
+Nous avons modélisé les cas d'utilisation par module. Chaque diagramme est suivi de tableaux décrivant les cas d'utilisation principaux.
 
 % ---------- Administration ----------
 \subsection{Administration}
@@ -53,7 +57,7 @@ oindent\textbf{Cas d'utilisation : Gérer les comptes et organisations}
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
 \textbf{Titre} & Gérer les comptes et organisations \\
-\textbf{Objectif} & Permettre à l'administrateur de créer, modifier et supprimer des comptes utilisateurs et des organisations. \\
+\textbf{Objectif} & Créer, modifier et supprimer des comptes utilisateurs. \\
 \textbf{Acteurs} & Administrateur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
@@ -63,12 +67,10 @@ oindent\textbf{Cas d'utilisation : Gérer les comptes et organisations}
 \textbf{Scénarios secondaires} & Modifier un compte existant ; supprimer un compte ; consulter la liste des utilisateurs. \\
 \hline
 \end{tabular}
-\caption{Description du cas d'utilisation « Gérer les comptes et organisations »}
+\caption{Description du cas d'utilisation « Gérer les comptes »}
 \end{table}
 
-\vspace{0.3cm}
-
-oindent\textbf{Cas d'utilisation : Répartir les rôles de chaque utilisateur}
+oindent\textbf{Cas d'utilisation : Répartir les rôles}
 
 \begin{table}[h!]
 \centering
@@ -78,13 +80,13 @@ oindent\textbf{Cas d'utilisation : Répartir les rôles de chaque utilisateur}
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
 \textbf{Titre} & Répartir les rôles de chaque utilisateur \\
-\textbf{Objectif} & Attribuer à chaque utilisateur le rôle correspondant à ses responsabilités dans la plateforme. \\
+\textbf{Objectif} & Attribuer à chaque utilisateur le rôle correspondant à ses responsabilités. \\
 \textbf{Acteurs} & Administrateur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
-\textbf{Pré-conditions} & L'utilisateur cible existe déjà dans le système. \\
-\textbf{Scénario nominal} & L'administrateur sélectionne un utilisateur et lui attribue un rôle parmi les cinq disponibles. \\
+\textbf{Pré-conditions} & L'utilisateur cible existe dans le système. \\
+\textbf{Scénario nominal} & L'administrateur sélectionne un utilisateur et lui attribue un rôle parmi les sept disponibles. \\
 \textbf{Scénarios secondaires} & Modifier le rôle d'un utilisateur existant. \\
 \hline
 \end{tabular}
@@ -102,6 +104,29 @@ oindent\textbf{Cas d'utilisation : Répartir les rôles de chaque utilisateur}
 
 \vspace{0.5cm}
 
+oindent\textbf{Cas d'utilisation : Gérer le modèle de risque et ses composants}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Gérer le modèle de risque et ses composants \\
+\textbf{Objectif} & Créer, modifier et supprimer des risques et leurs indicateurs. \\
+\textbf{Acteurs} & Risk Manager \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & L'utilisateur est authentifié avec le rôle Risk Manager. \\
+\textbf{Scénario nominal} & Le Risk Manager crée un nouveau risque, lui associe des indicateurs en précisant le libellé, le poids, le statut (POSITIVE/NEGATIVE/SPECIAL) et la plage de valeurs. \\
+\textbf{Scénarios secondaires} & Modifier un risque existant ; supprimer un indicateur ; ajuster les poids. \\
+\hline
+\end{tabular}
+\caption{Description du cas d'utilisation « Gérer le modèle de risque »}
+\end{table}
+
 oindent\textbf{Cas d'utilisation : Saisir les valeurs des indicateurs}
 
 \begin{table}[h!]
@@ -113,44 +138,17 @@ oindent\textbf{Cas d'utilisation : Saisir les valeurs des indicateurs}
 \hline
 \textbf{Titre} & Saisir les valeurs des indicateurs \\
 \textbf{Objectif} & Renseigner la valeur brute d'un indicateur pour un risque donné. \\
-\textbf{Acteurs} & Auditeur \\
+\textbf{Acteurs} & Risk Manager, Auditeur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
 \textbf{Pré-conditions} & Le risque et ses indicateurs existent dans le système. \\
-\textbf{Scénario nominal} & L'auditeur sélectionne un risque, choisit un indicateur et saisit sa valeur brute. Le système enregistre la valeur et calcule automatiquement la valeur normalisée. \\
-\textbf{Scénarios secondaires} & Modifier une valeur déjà saisie ; consulter l'historique des valeurs. \\
+\textbf{Scénario nominal} & L'utilisateur sélectionne un risque, choisit un indicateur et saisit sa valeur brute. Le système enregistre la valeur et calcule la valeur normalisée. \\
+\textbf{Scénarios secondaires} & Modifier une valeur déjà saisie ; consulter l'historique. \\
 \hline
 \end{tabular}
 \caption{Description du cas d'utilisation « Saisir les valeurs des indicateurs »}
 \end{table}
-
-\vspace{0.3cm}
-
-oindent\textbf{Cas d'utilisation : Gérer le modèle de risque et ses composants}
-
-\begin{table}[h!]
-\centering
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
-\hline
-\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
-\hline
-\textbf{Titre} & Gérer le modèle de risque et ses composants \\
-\textbf{Objectif} & Créer, modifier et supprimer des risques et leurs indicateurs associés. \\
-\textbf{Acteurs} & Organisateur administratif \\
-\hline
-\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
-\hline
-\textbf{Pré-conditions} & L'utilisateur est authentifié avec le rôle approprié. \\
-\textbf{Scénario nominal} & L'organisateur crée un nouveau risque, lui associe des indicateurs en précisant pour chacun le libellé, le poids, le statut (POSITIVE/NEGATIVE/SPECIAL) et la plage de valeurs. \\
-\textbf{Scénarios secondaires} & Modifier un risque ; supprimer un indicateur ; ajuster les poids. \\
-\hline
-\end{tabular}
-\caption{Description du cas d'utilisation « Gérer le modèle de risque »}
-\end{table}
-
-\vspace{0.3cm}
 
 oindent\textbf{Cas d'utilisation : Calculer le Risk Score}
 
@@ -162,8 +160,8 @@ oindent\textbf{Cas d'utilisation : Calculer le Risk Score}
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
 \textbf{Titre} & Calculer le Risk Score \\
-\textbf{Objectif} & Déclencher le calcul du score de gravité d'un risque à partir de ses indicateurs normalisés. \\
-\textbf{Acteurs} & Auditeur (déclenchement), Système (calcul automatique) \\
+\textbf{Objectif} & Calculer le score de gravité d'un risque à partir de ses indicateurs normalisés. \\
+\textbf{Acteurs} & Risk Manager, Auditeur (déclenchement) ; Système (calcul) \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
@@ -186,6 +184,29 @@ oindent\textbf{Cas d'utilisation : Calculer le Risk Score}
 
 \vspace{0.5cm}
 
+oindent\textbf{Cas d'utilisation : Gérer les poids des piliers/RMM}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Gérer les poids des piliers/RMM \\
+\textbf{Objectif} & Configurer les poids de chaque pilier dans un mécanisme de mitigation. \\
+\textbf{Acteurs} & Organisateur administratif \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Les mécanismes et les piliers existent dans le système. \\
+\textbf{Scénario nominal} & L'organisateur sélectionne un mécanisme, attribue un poids à chaque pilier (la somme doit être 1), et valide. \\
+\textbf{Scénarios secondaires} & Modifier les poids existants. \\
+\hline
+\end{tabular}
+\caption{Description du cas d'utilisation « Gérer les poids des piliers/RMM »}
+\end{table}
+
 oindent\textbf{Cas d'utilisation : Saisir les réponses d'évaluation}
 
 \begin{table}[h!]
@@ -202,16 +223,14 @@ oindent\textbf{Cas d'utilisation : Saisir les réponses d'évaluation}
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
 \textbf{Pré-conditions} & Une campagne d'évaluation est en cours. \\
-\textbf{Scénario nominal} & Le responsable accède au questionnaire de la campagne, répond aux items (valeurs de 1 à 5) pour chaque facteur, et soumet ses réponses. \\
-\textbf{Scénarios secondaires} & Sauvegarder un brouillon ; modifier des réponses avant soumission. \\
+\textbf{Scénario nominal} & Le responsable accède au questionnaire, répond aux items (valeurs de 1 à 5) et soumet ses réponses. \\
+\textbf{Scénarios secondaires} & Sauvegarder un brouillon ; modifier avant soumission. \\
 \hline
 \end{tabular}
 \caption{Description du cas d'utilisation « Saisir les réponses d'évaluation »}
 \end{table}
 
-\vspace{0.3cm}
-
-oindent\textbf{Cas d'utilisation : Gérer les poids des piliers/RMM}
+oindent\textbf{Cas d'utilisation : Consulter, analyser et valider les résultats}
 
 \begin{table}[h!]
 \centering
@@ -220,18 +239,18 @@ oindent\textbf{Cas d'utilisation : Gérer les poids des piliers/RMM}
 \hline
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
-\textbf{Titre} & Gérer les poids des piliers/RMM \\
-\textbf{Objectif} & Configurer les poids des piliers dans chaque mécanisme de mitigation. \\
-\textbf{Acteurs} & Organisateur administratif \\
+\textbf{Titre} & Consulter, analyser et valider les résultats \\
+\textbf{Objectif} & Visualiser les scores RL, RMMC, RMC et GPM calculés à partir des réponses. \\
+\textbf{Acteurs} & Auditeur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
-\textbf{Pré-conditions} & Les mécanismes et les piliers existent. \\
-\textbf{Scénario nominal} & L'organisateur sélectionne un mécanisme, attribue un poids à chaque pilier (la somme doit être égale à 1), et valide la configuration. \\
-\textbf{Scénarios secondaires} & Modifier les poids existants ; réinitialiser à des poids égaux. \\
+\textbf{Pré-conditions} & Une campagne est clôturée et les scores sont calculés. \\
+\textbf{Scénario nominal} & L'auditeur consulte le tableau de bord des résultats, visualise les scores par pilier et par mécanisme, compare les campagnes. \\
+\textbf{Scénarios secondaires} & Exporter les résultats en PDF/Excel. \\
 \hline
 \end{tabular}
-\caption{Description du cas d'utilisation « Gérer les poids des piliers/RMM »}
+\caption{Description du cas d'utilisation « Consulter et valider les résultats »}
 \end{table}
 
 % ---------- Gestion des campagnes ----------
@@ -255,17 +274,40 @@ oindent\textbf{Cas d'utilisation : Lancer une campagne d'évaluation}
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
 \textbf{Titre} & Lancer une campagne d'évaluation \\
-\textbf{Objectif} & Créer et démarrer une nouvelle campagne pour évaluer la maturité de l'organisation. \\
+\textbf{Objectif} & Créer et démarrer une campagne pour évaluer la maturité de l'organisation. \\
 \textbf{Acteurs} & Organisateur administratif \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
 \textbf{Pré-conditions} & Le référentiel (piliers, dimensions, facteurs, items) est configuré. \\
-\textbf{Scénario nominal} & L'organisateur crée une campagne en lui donnant un nom, puis la lance. Les responsables organisationnels peuvent alors y répondre. \\
-\textbf{Scénarios secondaires} & Clôturer la campagne ; suivre l'avancement. \\
+\textbf{Scénario nominal} & L'organisateur crée une campagne, lui donne un nom, et la lance. Les responsables organisationnels peuvent alors y répondre. \\
+\textbf{Scénarios secondaires} & Suivre l'avancement ; clôturer la campagne. \\
 \hline
 \end{tabular}
 \caption{Description du cas d'utilisation « Lancer une campagne »}
+\end{table}
+
+oindent\textbf{Cas d'utilisation : Suivre l'avancement de la campagne}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Suivre l'avancement de la campagne \\
+\textbf{Objectif} & Visualiser le taux de complétion et le nombre de réponses reçues. \\
+\textbf{Acteurs} & Organisateur administratif, Responsable organisationnel \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & La campagne est en cours. \\
+\textbf{Scénario nominal} & L'utilisateur consulte le pourcentage d'avancement de la campagne et le nombre de réponses soumises. \\
+\textbf{Scénarios secondaires} & -- \\
+\hline
+\end{tabular}
+\caption{Description du cas d'utilisation « Suivre l'avancement »}
 \end{table}
 
 % ---------- Module I-PAGe ----------
@@ -289,17 +331,40 @@ oindent\textbf{Cas d'utilisation : Simuler l'effet des mécanismes}
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
 \textbf{Titre} & Simuler l'effet des mécanismes \\
-\textbf{Objectif} & Simuler l'impact du déploiement des RMM sur les indicateurs de risque et comparer le Risk Score avant/après. \\
-\textbf{Acteurs} & Organisateur administratif, Responsable organisationnel, Décideur \\
+\textbf{Objectif} & Simuler l'impact du déploiement des RMM sur les indicateurs et comparer le Risk Score avant/après. \\
+\textbf{Acteurs} & Organisateur administratif, Responsable organisationnel, Décideur, Auditeur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
 \textbf{Pré-conditions} & La matrice d'impact est configurée ; les niveaux de déploiement sont saisis. \\
-\textbf{Scénario nominal} & L'utilisateur sélectionne un scénario de simulation, active des mécanismes avec un niveau de déploiement, et lance la simulation. Le système recalcule les indicateurs à t+1 et affiche le nouveau Risk Score. \\
+\textbf{Scénario nominal} & L'utilisateur sélectionne un scénario, active des mécanismes avec un niveau de déploiement, lance la simulation. Le système recalcule les indicateurs à t+1 et affiche le nouveau Risk Score. \\
 \textbf{Scénarios secondaires} & Comparer plusieurs scénarios ; exporter les résultats. \\
 \hline
 \end{tabular}
 \caption{Description du cas d'utilisation « Simuler l'effet des mécanismes »}
+\end{table}
+
+oindent\textbf{Cas d'utilisation : Configurer la matrice d'impact RMM}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Configurer la matrice d'impact RMM \\
+\textbf{Objectif} & Définir les coefficients d'impact de chaque mécanisme sur chaque indicateur. \\
+\textbf{Acteurs} & Organisateur administratif, Auditeur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Les mécanismes et les indicateurs existent. \\
+\textbf{Scénario nominal} & L'utilisateur sélectionne un mécanisme, associe des indicateurs et définit les valeurs d'impact pour chacun. \\
+\textbf{Scénarios secondaires} & Modifier des coefficients existants. \\
+\hline
+\end{tabular}
+\caption{Description du cas d'utilisation « Configurer la matrice d'impact »}
 \end{table}
 
 % ---------- Analytics & Reporting ----------
@@ -313,6 +378,29 @@ oindent\textbf{Cas d'utilisation : Simuler l'effet des mécanismes}
 
 \vspace{0.5cm}
 
+oindent\textbf{Cas d'utilisation : Consulter les tableaux de bord}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Consulter les tableaux de bord \\
+\textbf{Objectif} & Visualiser les résultats globaux (Risk Scores, GPM, comparaisons). \\
+\textbf{Acteurs} & Responsable organisationnel, Décideur, Observateur, Auditeur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Des résultats de calcul existent. \\
+\textbf{Scénario nominal} & L'utilisateur accède aux tableaux de bord et visualise les scores par risque, par mécanisme et le GPM global. \\
+\textbf{Scénarios secondaires} & Filtrer par campagne ; comparer avant/après mitigation. \\
+\hline
+\end{tabular}
+\caption{Description du cas d'utilisation « Consulter les tableaux de bord »}
+\end{table}
+
 oindent\textbf{Cas d'utilisation : Exporter les rapports}
 
 \begin{table}[h!]
@@ -323,14 +411,14 @@ oindent\textbf{Cas d'utilisation : Exporter les rapports}
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
 \textbf{Titre} & Exporter les rapports \\
-\textbf{Objectif} & Générer et télécharger un rapport PDF ou Excel contenant les résultats d'évaluation. \\
-\textbf{Acteurs} & Responsable organisationnel, Décideur, Auditeur \\
+\textbf{Objectif} & Générer et télécharger un rapport PDF ou Excel. \\
+\textbf{Acteurs} & Responsable organisationnel, Décideur, Observateur, Auditeur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
-\textbf{Pré-conditions} & Des résultats de campagne existent. \\
-\textbf{Scénario nominal} & L'utilisateur sélectionne le type d'export (PDF ou Excel) et lance la génération. Le fichier est téléchargé automatiquement. \\
-\textbf{Scénarios secondaires} & Choisir les données à inclure ; exporter un comparatif avant/après. \\
+\textbf{Pré-conditions} & Des résultats existent. \\
+\textbf{Scénario nominal} & L'utilisateur choisit le format (PDF ou Excel) et lance l'export. Le fichier est téléchargé. \\
+\textbf{Scénarios secondaires} & Choisir les données à inclure. \\
 \hline
 \end{tabular}
 \caption{Description du cas d'utilisation « Exporter les rapports »}
@@ -338,7 +426,7 @@ oindent\textbf{Cas d'utilisation : Exporter les rapports}
 
 % ================================================================
 \section{Diagramme de classes}
-Le diagramme de classes présente les entités principales du système, organisées par module. Il reflète la structure réelle du code.
+Le diagramme de classes présente les entités principales du système, organisées par module.
 
 \begin{figure}[h!]
 \centering
@@ -365,7 +453,7 @@ Le MCD représente les entités métier et leurs associations. Il a servi de bas
 \caption{Modèle Conceptuel de Données (MCD)}
 \end{figure}
 
-Les principales entités et leurs relations :
+Les principales relations :
 \begin{itemize}
     \item Un \textbf{User} possède un \textbf{Role} et gère des \textbf{Campaigns}.
     \item Un \textbf{Risk} contient plusieurs \textbf{Indicators}, est évalué par des \textbf{Risk Scores}, et est mitigé par des \textbf{RMM}.
@@ -374,7 +462,7 @@ Les principales entités et leurs relations :
     \item Un \textbf{Key Pillar} est composé de \textbf{Dimensions}, elles-mêmes composées de \textbf{Factors}, eux-mêmes composés d'\textbf{Items}.
     \item Les \textbf{Items} reçoivent des \textbf{Item Responses} dans le cadre d'une campagne.
     \item La \textbf{Impact Matrix} relie les RMM aux Indicators avec des coefficients d'impact.
-    \item Les résultats de calcul sont stockés dans \textbf{RMMC\_Results}, \textbf{RMC\_Results} et \textbf{GPM\_Results}.
+    \item Les résultats sont stockés dans \textbf{RMMC\_Results}, \textbf{RMC\_Results} et \textbf{GPM\_Results}.
 \end{itemize}
 
 % ================================================================
@@ -389,11 +477,11 @@ La plateforme suit une architecture à trois couches, déployée via Docker Comp
 
 \begin{itemize}
     \item \textbf{Couche présentation} : application React/TypeScript servie par Vite, communique avec les backends via des appels API REST.
-    \item \textbf{Couche métier} : deux backends Django (O-PAGe sur le port 8000, M-PAGe sur le port 8001), chacun exposant des endpoints REST via Django REST Framework. Le backend M-PAGe proxie les appels vers O-PAGe quand nécessaire.
-    \item \textbf{Couche données} : une base PostgreSQL partagée entre les deux backends, administrée via pgAdmin.
-    \item \textbf{Orchestration} : Docker Compose lance l'ensemble (5 conteneurs : db, opage-backend, mpage-backend, mpage-frontend, pgadmin).
+    \item \textbf{Couche métier} : deux backends Django exposant des endpoints REST. Le backend O-PAGe (port 8000) gère les risques et indicateurs. Le backend M-PAGe (port 8001) gère le référentiel, les campagnes et les calculs de maturité. Le backend M-PAGe proxie les appels vers O-PAGe quand nécessaire.
+    \item \textbf{Couche données} : une base PostgreSQL partagée entre les deux backends.
+    \item \textbf{Orchestration} : Docker Compose lance cinq conteneurs (db, opage-backend, mpage-backend, mpage-frontend, pgadmin).
 \end{itemize}
 
 % ================================================================
 \section{Conclusion}
-Ce chapitre a présenté l'analyse des besoins à travers les diagrammes de cas d'utilisation et la description des scénarios pour chaque module. Nous avons aussi présenté le diagramme de classes, le MCD et l'architecture technique de la plateforme. Le chapitre suivant détaille la réalisation concrète de l'application.
+Ce chapitre a présenté l'analyse des besoins à travers les sept acteurs identifiés et les diagrammes de cas d'utilisation pour chaque module. Nous avons aussi présenté le diagramme de classes, le MCD et l'architecture technique. Le chapitre suivant détaille la réalisation concrète de l'application.
