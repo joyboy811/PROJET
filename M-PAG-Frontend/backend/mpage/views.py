@@ -18,6 +18,7 @@ from .models import (
     RiskMitigationMechanism, RMMKeyPillarWeight,
     Campaign, ItemResponse,
     ReadinessLevel, RMMCResult, RMCResult, GPMResult,
+    Project, UserProfile,
 )
 from .models_admin import SystemAdmin
 from .serializers import (
@@ -28,6 +29,7 @@ from .serializers import (
     CampaignSerializer, ItemResponseSerializer,
     ReadinessLevelSerializer, RMMCResultSerializer,
     RMCResultSerializer, GPMResultSerializer,
+    ProjectSerializer,
 )
 from .calculations import run_full_calculation
 from django.contrib.auth.models import Group
@@ -35,6 +37,51 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def get_user_project_id(request):
+    """Extract project_id from the authenticated user's profile. Returns None for system_admin."""
+    if request.session.get('system_admin_id'):
+        return None
+    user = request.user
+    if not user or not user.is_authenticated:
+        return None
+    try:
+        return user.profile.project_id
+    except UserProfile.DoesNotExist:
+        return None
+
+
+class ProjectFilterMixin:
+    """Filter queryset by the connected user's project. System admins see all."""
+    project_field = 'project'  # override in subclass if needed
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        project_id = get_user_project_id(self.request)
+        if project_id is not None:
+            qs = qs.filter(**{self.project_field: project_id})
+        return qs
+
+    def perform_create(self, serializer):
+        project_id = get_user_project_id(self.request)
+        if project_id is not None:
+            serializer.save(project_id=project_id)
+        else:
+            serializer.save()
+
+
+class IsSystemAdmin(BasePermission):
+    """Only system_admin (separate model) can access."""
+    def has_permission(self, request, view):
+        return bool(request.session.get('system_admin_id'))
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    """CRUD for projects - system_admin only."""
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsSystemAdmin]
 
 
 # Permission: only superuser or users in group 'administrateur' can manage users
@@ -153,14 +200,24 @@ def me_view(request):
     
     # Check if regular User is logged in
     if request.user.is_authenticated:
-        return Response(UserSerializer(request.user).data)
+        data = UserSerializer(request.user).data
+        # Include project info
+        try:
+            profile = request.user.profile
+            if profile.project:
+                data['project'] = {'id': profile.project.id, 'name': profile.project.name}
+            else:
+                data['project'] = None
+        except UserProfile.DoesNotExist:
+            data['project'] = None
+        return Response(data)
     
     return Response({'user': None}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 # ── Hierarchy ViewSets ───────────────────────────────────────
 
-class KeyPillarViewSet(viewsets.ModelViewSet):
+class KeyPillarViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = KeyPillar.objects.prefetch_related(
         'dimensions__factors__items'
     ).all()
@@ -182,9 +239,10 @@ class KeyPillarViewSet(viewsets.ModelViewSet):
         return KeyPillarSerializer
 
 
-class DimensionViewSet(viewsets.ModelViewSet):
+class DimensionViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = Dimension.objects.prefetch_related('factors__items').all()
     serializer_class = DimensionSerializer
+    project_field = 'pillar__project'
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -194,9 +252,10 @@ class DimensionViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class FactorViewSet(viewsets.ModelViewSet):
+class FactorViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = Factor.objects.prefetch_related('items').all()
     serializer_class = FactorSerializer
+    project_field = 'dimension__pillar__project'
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -206,9 +265,10 @@ class FactorViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class ItemViewSet(viewsets.ModelViewSet):
+class ItemViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
+    project_field = 'factor__dimension__pillar__project'
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -220,7 +280,7 @@ class ItemViewSet(viewsets.ModelViewSet):
 
 # ── RMM ViewSets ─────────────────────────────────────────────
 
-class RMMViewSet(viewsets.ModelViewSet):
+class RMMViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = RiskMitigationMechanism.objects.prefetch_related('kp_weights').all()
 
     def get_serializer_class(self):
@@ -256,7 +316,7 @@ class RMMKeyPillarWeightViewSet(viewsets.ModelViewSet):
 # ── Campaign ViewSets ────────────────────────────────────────
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CampaignViewSet(viewsets.ModelViewSet):
+class CampaignViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = Campaign.objects.all()
     serializer_class = CampaignSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
@@ -440,9 +500,10 @@ class CampaignViewSet(viewsets.ModelViewSet):
         })
 
 
-class ItemResponseViewSet(viewsets.ModelViewSet):
+class ItemResponseViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = ItemResponse.objects.all()
     serializer_class = ItemResponseSerializer
+    project_field = 'campaign__project'
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -522,9 +583,10 @@ def batch_responses(request):
 
 # ── Results ViewSets ─────────────────────────────────────────
 
-class ReadinessLevelViewSet(viewsets.ReadOnlyModelViewSet):
+class ReadinessLevelViewSet(ProjectFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = ReadinessLevel.objects.all()
     serializer_class = ReadinessLevelSerializer
+    project_field = 'campaign__project'
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -534,19 +596,22 @@ class ReadinessLevelViewSet(viewsets.ReadOnlyModelViewSet):
         return qs
 
 
-class RMMCResultViewSet(viewsets.ReadOnlyModelViewSet):
+class RMMCResultViewSet(ProjectFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = RMMCResult.objects.all()
     serializer_class = RMMCResultSerializer
+    project_field = 'campaign__project'
 
 
-class RMCResultViewSet(viewsets.ReadOnlyModelViewSet):
+class RMCResultViewSet(ProjectFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = RMCResult.objects.all()
     serializer_class = RMCResultSerializer
+    project_field = 'campaign__project'
 
 
-class GPMResultViewSet(viewsets.ReadOnlyModelViewSet):
+class GPMResultViewSet(ProjectFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = GPMResult.objects.all()
     serializer_class = GPMResultSerializer
+    project_field = 'campaign__project'
 
 
 # ── O-PAGe Proxy ─────────────────────────────────────────────
@@ -558,10 +623,17 @@ def opage_risks(request):
     """
     try:
         url = f"{settings.OPAGE_API_URL}/risks/"
+        project_id = get_user_project_id(request)
         if request.method == 'POST':
-            resp = requests.post(url, json=request.data, timeout=5)
+            data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+            if project_id:
+                data['project_id'] = project_id
+            resp = requests.post(url, json=data, timeout=5)
         else:
-            resp = requests.get(url, timeout=5)
+            params = dict(request.query_params)
+            if project_id:
+                params['project_id'] = project_id
+            resp = requests.get(url, params=params, timeout=5)
         resp.raise_for_status()
         return Response(resp.json())
     except requests.exceptions.ConnectionError:
@@ -583,10 +655,17 @@ def opage_key_pillars(request):
     """
     try:
         url = f"{settings.OPAGE_API_URL}/key-pillars/"
+        project_id = get_user_project_id(request)
         if request.method == 'POST':
-            resp = requests.post(url, json=request.data, timeout=5)
+            data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+            if project_id:
+                data['project_id'] = project_id
+            resp = requests.post(url, json=data, timeout=5)
         else:
-            resp = requests.get(url, timeout=5)
+            params = dict(request.query_params)
+            if project_id:
+                params['project_id'] = project_id
+            resp = requests.get(url, params=params, timeout=5)
         resp.raise_for_status()
         return Response(resp.json())
     except requests.exceptions.ConnectionError:
@@ -676,7 +755,11 @@ def opage_risk_scores(request):
     """Proxy to fetch risk scores from O-PAGe"""
     try:
         url = f"{settings.OPAGE_API_URL}/risk-scores/"
-        resp = requests.get(url, timeout=5)
+        params = dict(request.query_params)
+        project_id = get_user_project_id(request)
+        if project_id:
+            params['project_id'] = project_id
+        resp = requests.get(url, params=params, timeout=5)
         resp.raise_for_status()
         return Response(resp.json())
     except requests.exceptions.ConnectionError:
@@ -696,10 +779,17 @@ def opage_indicators(request):
     """Proxy view for O-PAGe indicators"""
     try:
         url = f"{settings.OPAGE_API_URL}/indicators/"
+        project_id = get_user_project_id(request)
         if request.method == 'POST':
-            resp = requests.post(url, json=request.data, timeout=5)
+            data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+            if project_id:
+                data['project_id'] = project_id
+            resp = requests.post(url, json=data, timeout=5)
         else:
-            resp = requests.get(url, params=request.query_params, timeout=5)
+            params = dict(request.query_params)
+            if project_id:
+                params['project_id'] = project_id
+            resp = requests.get(url, params=params, timeout=5)
         resp.raise_for_status()
         return Response(resp.json())
     except requests.exceptions.ConnectionError:
@@ -719,10 +809,14 @@ def opage_indicator_values(request):
     """Proxy view for O-PAGe indicator values"""
     try:
         url = f"{settings.OPAGE_API_URL}/indicator-values/"
+        project_id = get_user_project_id(request)
         if request.method == 'POST':
             resp = requests.post(url, json=request.data, timeout=5)
         else:
-            resp = requests.get(url, params=request.query_params, timeout=5)
+            params = dict(request.query_params)
+            if project_id:
+                params['project_id'] = project_id
+            resp = requests.get(url, params=params, timeout=5)
         resp.raise_for_status()
         return Response(resp.json())
     except requests.exceptions.ConnectionError:

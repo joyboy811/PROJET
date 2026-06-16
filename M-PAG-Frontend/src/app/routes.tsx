@@ -9,6 +9,7 @@ import { EditMechanism } from './pages/admin/EditMechanism';
 import { ReferenceManagement } from './pages/admin/ReferenceManagement';
 import { AdminDashboard } from './pages/admin/Dashboard';
 import { UserManagement } from './pages/UserManagement';
+import { ProjectManagement } from './pages/ProjectManagement';
 import { OPageRisks } from './pages/risk_manager/OPageRisks';
 import { OPageRiskManagement } from './pages/risk_manager/OPageRiskManagement';
 import { ImpactSimulation } from './pages/ImpactSimulation';
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
       { path: 'reference', Component: ReferenceManagement },
       { path: 'admin-dashboard', Component: AdminDashboard },
       { path: 'admin/users', Component: UserManagement },
+      { path: 'admin/projects', Component: ProjectManagement },
       
       // Manager routes
       { path: 'campaigns', Component: CampaignList },

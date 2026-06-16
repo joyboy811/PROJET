@@ -21,23 +21,24 @@ from .ipage_serializers import (
     IPageSimulationSerializer, IPageSimulationCreateSerializer,
     IPageSimulationMechanismSerializer, IPageSimulationResultSerializer,
 )
+from .views import get_user_project_id, ProjectFilterMixin
 
 
 # ──────────────────────────────────────────────────────────────
 # Read-only lookups
 # ──────────────────────────────────────────────────────────────
 
-class IPageIndicatorViewSet(viewsets.ModelViewSet):
+class IPageIndicatorViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = IPageIndicator.objects.all()
     serializer_class = IPageIndicatorSerializer
 
 
-class IPageMechanismViewSet(viewsets.ModelViewSet):
+class IPageMechanismViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = IPageMechanism.objects.prefetch_related('effects', 'effects__indicator').all()
     serializer_class = IPageMechanismSerializer
 
 
-class IPageScenarioViewSet(viewsets.ModelViewSet):
+class IPageScenarioViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = IPageScenario.objects.prefetch_related(
         'scenario_mechanisms', 'scenario_mechanisms__mechanism'
     ).all()
@@ -52,7 +53,7 @@ class IPageScenarioViewSet(viewsets.ModelViewSet):
 # Simulation lifecycle
 # ──────────────────────────────────────────────────────────────
 
-class IPageSimulationViewSet(viewsets.ModelViewSet):
+class IPageSimulationViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = IPageSimulation.objects.prefetch_related(
         'sim_mechanisms', 'sim_mechanisms__mechanism',
         'results', 'results__indicator',
@@ -246,8 +247,14 @@ class IPageSimulationViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 def ipage_bootstrap(request):
     """Initialize I-PAGe reference data (indicators, mechanisms, scenarios) if empty."""
-    if IPageIndicator.objects.exists():
-        return Response({'status': 'already_initialized'})
+    project_id = get_user_project_id(request)
+    # Check within the project scope
+    if project_id:
+        if IPageIndicator.objects.filter(project_id=project_id).exists():
+            return Response({'status': 'already_initialized'})
+    else:
+        if IPageIndicator.objects.exists():
+            return Response({'status': 'already_initialized'})
 
     # Create indicators
     indicator_data = [
@@ -260,7 +267,7 @@ def ipage_bootstrap(request):
     ]
     indicators = {}
     for name, code, order in indicator_data:
-        ind = IPageIndicator.objects.create(name=name, code=code, order=order)
+        ind = IPageIndicator.objects.create(name=name, code=code, order=order, project_id=project_id)
         indicators[code] = ind
 
     # Create mechanisms with effects
@@ -354,7 +361,7 @@ def ipage_bootstrap(request):
     mechanisms = []
     for mech_data in mechanism_data:
         effects_data = mech_data.pop('effects')
-        mech = IPageMechanism.objects.create(**mech_data)
+        mech = IPageMechanism.objects.create(**mech_data, project_id=project_id)
         mechanisms.append(mech)
         for code, value in effects_data.items():
             IPageMechanismEffect.objects.create(
@@ -405,7 +412,7 @@ def ipage_bootstrap(request):
 
     for sdata in scenario_data:
         mechs_config = sdata.pop('mechanisms')
-        scenario = IPageScenario.objects.create(**sdata)
+        scenario = IPageScenario.objects.create(**sdata, project_id=project_id)
         for mech_idx, active, level in mechs_config:
             IPageScenarioMechanism.objects.create(
                 scenario=scenario,

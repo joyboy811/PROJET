@@ -17,6 +17,7 @@ router.register(r'rmmc-results', views.RMMCResultViewSet)
 router.register(r'rmc-results',  views.RMCResultViewSet)
 router.register(r'gpm-results',  views.GPMResultViewSet)
 router.register(r'users',        views.UserViewSet)
+router.register(r'projects',     views.ProjectViewSet)
 
 # I-PAGe routes
 router.register(r'ipage/indicators',  ipage_views.IPageIndicatorViewSet)

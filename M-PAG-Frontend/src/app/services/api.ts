@@ -64,6 +64,14 @@ function del<T>(path: string): Promise<T> {
 
 export type UserRole = 'system_admin' | 'administrateur' | 'responsable_risques' | 'responsable_org' | 'auditeur' | 'decideur' | 'observateur';
 
+export interface Project {
+  id: number;
+  name: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface User {
   id: number;
   username: string;
@@ -71,6 +79,7 @@ export interface User {
   first_name: string;
   last_name: string;
   role: UserRole;
+  project?: { id: number; name: string } | null;
 }
 
 export interface Item {
@@ -273,11 +282,23 @@ export const authApi = {
 // ── Users API ──────────────────────────────────────────────
 export const usersApi = {
   list: () => get<User[]>('/users/'),
-  create: (data: { username: string; email?: string; first_name?: string; last_name?: string; password: string; role: UserRole }) =>
+  create: (data: { username: string; email?: string; first_name?: string; last_name?: string; password: string; role: UserRole; project_id?: number | null }) =>
     post<User>('/users/', data),
-  update: (id: number, data: Partial<{ username: string; email: string; first_name: string; last_name: string; password?: string; role?: UserRole }>) =>
+  update: (id: number, data: Partial<{ username: string; email: string; first_name: string; last_name: string; password?: string; role?: UserRole; project_id?: number | null }>) =>
     patch<User>(`/users/${id}/`, data),
   delete: (id: number) => del(`/users/${id}/`),
+};
+
+
+// ── Projects API ────────────────────────────────────────────
+export const projectsApi = {
+  list: () => get<Project[]>('/projects/'),
+  get: (id: number) => get<Project>(`/projects/${id}/`),
+  create: (data: { name: string; description?: string }) =>
+    post<Project>('/projects/', data),
+  update: (id: number, data: Partial<Project>) =>
+    patch<Project>(`/projects/${id}/`, data),
+  delete: (id: number) => del(`/projects/${id}/`),
 };
 
 

@@ -5,18 +5,29 @@ from .models import (
     RiskMitigationMechanism, RMMKeyPillarWeight,
     Campaign, ItemResponse,
     ReadinessLevel, RMMCResult, RMCResult, GPMResult,
+    Project,
 )
 from .models_admin import SystemAdmin
+
+
+# ── Project ──────────────────────────────────────────────────
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'description', 'is_active', 'created_at']
+        read_only_fields = ['created_at']
 
 
 # ── User ─────────────────────────────────────────────────────
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'project']
 
     def get_role(self, obj):
         if obj.is_superuser:
@@ -36,8 +47,14 @@ class UserSerializer(serializers.ModelSerializer):
             return 'observateur'
         return 'observateur'  # default
 
-    # Note: Plaintext passwords are persisted in the UserPlainPassword model
-    # but are intentionally NOT exposed through this serializer.
+    def get_project(self, obj):
+        try:
+            profile = obj.profile
+            if profile.project:
+                return {'id': profile.project.id, 'name': profile.project.name}
+        except Exception:
+            pass
+        return None
 
 
 # ── SystemAdmin ──────────────────────────────────────────────
@@ -68,14 +85,16 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True,
         required=True,
     )
+    project_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'role']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'role', 'project_id']
 
     def create(self, validated_data):
         role = validated_data.pop('role')
         password = validated_data.pop('password')
+        project_id = validated_data.pop('project_id', None)
         user = User(**validated_data)
         user.set_password(password)
         user.save()
@@ -87,6 +106,12 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
             user.groups.add(grp)
         except Exception:
             pass
+        # Create/update UserProfile with project
+        from .models import UserProfile, Project
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if project_id:
+            profile.project_id = project_id
+            profile.save()
         from .models_admin import UserPlainPassword
         try:
             UserPlainPassword.objects.update_or_create(
@@ -95,7 +120,7 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
             )
         except Exception:
             pass
-        # Also attempt to persist the plain password on auth_user.plain_password
+        # Persist plain password in auth_user.plain_password column
         try:
             from django.db import connection
             with connection.cursor() as cursor:
@@ -104,13 +129,13 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
                     [password, user.id]
                 )
         except Exception:
-            # If the column doesn't exist yet or DB error occurs, ignore safely
             pass
         return user
 
     def update(self, instance, validated_data):
         role = validated_data.pop('role', None)
         password = validated_data.pop('password', None)
+        project_id = validated_data.pop('project_id', None)
         for attr, val in validated_data.items():
             setattr(instance, attr, val)
         if password:
@@ -124,6 +149,12 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
                 instance.groups.add(grp)
             except Exception:
                 pass
+        # Update project assignment
+        from .models import UserProfile
+        if project_id is not None:
+            profile, _ = UserProfile.objects.get_or_create(user=instance)
+            profile.project_id = project_id if project_id else None
+            profile.save()
         if password:
             from .models_admin import UserPlainPassword
             try:
@@ -133,7 +164,7 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
                 )
             except Exception:
                 pass
-            # Also attempt to persist the plain password on auth_user.plain_password
+            # Persist plain password in auth_user.plain_password column
             try:
                 from django.db import connection
                 with connection.cursor() as cursor:

@@ -154,6 +154,12 @@ export function Layout() {
             icon: Shield,
             roles: ['system_admin'],
           },
+          {
+            path: '/admin/projects',
+            label: 'Project Management',
+            icon: Database,
+            roles: ['system_admin'],
+          },
         ],
       },
     ],
@@ -245,6 +251,9 @@ export function Layout() {
                 <p className="text-sm font-semibold text-slate-900">{displayName}</p>
                 <p className="text-xs text-slate-500">{roleLabels[user.role] || user.role}</p>
               </div>
+              {user.project && (
+                <p className="text-base font-bold" style={{ color: '#155AF0' }}>{user.project.name}</p>
+              )}
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100"

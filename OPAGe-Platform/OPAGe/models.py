@@ -15,6 +15,7 @@ class IndicatorStatus(models.TextChoices):
 class Risk(models.Model):
     name        = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    project_id  = models.IntegerField(null=True, blank=True, help_text="Project ID for multi-project isolation")
 
     def compute_score(self):
         total = 0.0
@@ -91,6 +92,7 @@ class RiskScore(models.Model):
 class KeyPillar(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=100, blank=True)
+    project_id = models.IntegerField(null=True, blank=True, help_text="Project ID for multi-project isolation")
 
     def __str__(self):
         return self.name
@@ -100,6 +102,7 @@ class RMM(models.Model):
     risk        = models.ForeignKey(Risk, on_delete=models.CASCADE, related_name='rmms')
     name        = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    project_id  = models.IntegerField(null=True, blank=True, help_text="Project ID for multi-project isolation")
 
     def __str__(self):
         return f"{self.risk.name} — {self.name}"

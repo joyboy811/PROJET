@@ -42,7 +42,7 @@ class RMMSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = RMM
-        fields = ['id', 'risk', 'name', 'description', 'kp_weights']
+        fields = ['id', 'risk', 'name', 'description', 'project_id', 'kp_weights']
 
 
 class RiskSerializer(serializers.ModelSerializer):
@@ -52,10 +52,10 @@ class RiskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = Risk
-        fields = ['id', 'name', 'description', 'indicators', 'scores', 'rmms']
+        fields = ['id', 'name', 'description', 'project_id', 'indicators', 'scores', 'rmms']
 
 
 class KeyPillarSerializer(serializers.ModelSerializer):
     class Meta:
         model  = KeyPillar
-        fields = ['id', 'name', 'type']
+        fields = ['id', 'name', 'type', 'project_id']

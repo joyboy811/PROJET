@@ -11,13 +11,49 @@ from django.contrib.auth.models import User
 
 
 # ──────────────────────────────────────────────────────────────
+# Multi-project architecture
+# ──────────────────────────────────────────────────────────────
+
+class Project(models.Model):
+    """A project/organization representing an independent workspace."""
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'mpage_project'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class UserProfile(models.Model):
+    """Links a Django User to a Project."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    project = models.ForeignKey(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='members'
+    )
+
+    class Meta:
+        db_table = 'mpage_userprofile'
+
+    def __str__(self):
+        return f"{self.user.username} → {self.project}"
+
+
+# ──────────────────────────────────────────────────────────────
 # Reference data: Pillar hierarchy
 # ──────────────────────────────────────────────────────────────
 
 class KeyPillar(models.Model):
     """Key pillars are created from O-PAGe key pillars and stored in M-PAGe."""
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name='keypillars'
+    )
     name = models.CharField(max_length=255)
-    code = models.CharField(max_length=50, unique=True)
+    code = models.CharField(max_length=50)
     pillar_type = models.CharField(max_length=255)
     icon = models.CharField(max_length=50, blank=True, default='shield')
 
@@ -29,6 +65,7 @@ class KeyPillar(models.Model):
     class Meta:
         db_table = 'mpage_keypillar'
         ordering = ['id']
+        unique_together = ('project', 'code')
 
     def __str__(self):
         return self.name
@@ -85,6 +122,9 @@ class RiskMitigationMechanism(models.Model):
     A mechanism that mitigates a specific risk.
     The associated_risk_id references a Risk in the O-PAGe module (same DB).
     """
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name='rmms'
+    )
     name               = models.CharField(max_length=255)
     description        = models.TextField(blank=True)
     associated_risk_id = models.IntegerField(
@@ -127,6 +167,9 @@ class Campaign(models.Model):
         ('in_progress', 'En cours'),
         ('completed', 'Terminee'),
     ]
+    project      = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name='campaigns'
+    )
     name         = models.CharField(max_length=255)
     organization = models.CharField(max_length=255, blank=True)
     status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
@@ -228,13 +271,17 @@ class GPMResult(models.Model):
 
 class IPageIndicator(models.Model):
     """Impact indicators used in simulation (e.g. error rate, bias, transparency)"""
-    name  = models.CharField(max_length=255, unique=True)
-    code  = models.CharField(max_length=100, unique=True)
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name='ipage_indicators'
+    )
+    name  = models.CharField(max_length=255)
+    code  = models.CharField(max_length=100)
     order = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'ipage_indicator'
         ordering = ['order', 'id']
+        unique_together = ('project', 'code')
 
     def __str__(self):
         return self.name
@@ -242,6 +289,9 @@ class IPageIndicator(models.Model):
 
 class IPageScenario(models.Model):
     """A mitigation scenario grouping multiple mechanisms"""
+    project     = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name='ipage_scenarios'
+    )
     name        = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_at  = models.DateTimeField(auto_now_add=True)
@@ -256,6 +306,9 @@ class IPageScenario(models.Model):
 
 class IPageMechanism(models.Model):
     """A mitigation mechanism used in impact simulation"""
+    project          = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name='ipage_mechanisms'
+    )
     name             = models.CharField(max_length=255)
     description      = models.TextField(blank=True)
     default_active   = models.BooleanField(default=False)
@@ -318,6 +371,9 @@ class IPageSimulation(models.Model):
     ]
 
     name           = models.CharField(max_length=255, blank=True)
+    project        = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True, blank=True, related_name='ipage_simulations'
+    )
     organization   = models.CharField(max_length=255, blank=True)
     department     = models.CharField(max_length=255, blank=True)
     risk_id        = models.IntegerField(help_text="O-PAGe Risk ID")
