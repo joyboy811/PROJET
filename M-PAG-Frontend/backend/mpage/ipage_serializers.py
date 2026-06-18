@@ -111,6 +111,13 @@ class IPageSimulationCreateSerializer(serializers.ModelSerializer):
             'scenario', 'method', 'confidence', 'horizon', 'iterations',
             'mechanisms',
         ]
+        extra_kwargs = {
+            'name': {'required': False},
+            'organization': {'required': False},
+            'department': {'required': False},
+            'risk_name': {'required': False},
+            'scenario': {'required': False, 'allow_null': True},
+        }
 
     def create(self, validated_data):
         mechanisms_data = validated_data.pop('mechanisms', [])

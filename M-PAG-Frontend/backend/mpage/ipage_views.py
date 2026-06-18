@@ -65,7 +65,13 @@ class IPageSimulationViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
         return IPageSimulationSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user if self.request.user.is_authenticated else None)
+        project_id = get_user_project_id(self.request)
+        kwargs = {}
+        if project_id is not None:
+            kwargs['project_id'] = project_id
+        if self.request.user.is_authenticated:
+            kwargs['created_by'] = self.request.user
+        serializer.save(**kwargs)
 
     @action(detail=True, methods=['post'])
     def run(self, request, pk=None):

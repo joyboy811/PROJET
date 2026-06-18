@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { opageApi, ipageApi, OPageRisk, IPageScenario, IPageMechanism, IPageIndicator, IPageSimulationRunResponse } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const steps = ['Parameters', 'Simulation', 'Impact matrix', 'Results'];
 
@@ -167,6 +168,8 @@ interface MechanismState {
 }
 
 export function ImpactSimulation() {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'observateur';
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [risks, setRisks] = useState<OPageRisk[]>([]);
@@ -309,10 +312,12 @@ export function ImpactSimulation() {
   const [editingCell, setEditingCell] = useState<{ rmmId: number; indicator: string } | null>(null);
 
   const updateMechanism = (id: number, changes: Partial<MechanismState>) => {
+    if (isReadOnly) return;
     setMechanisms((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   };
 
   const updateMechanismEffect = (id: number, indicator: string, value: number) => {
+    if (isReadOnly) return;
     setMechanisms((prev) =>
       prev.map((item) =>
         item.id === id
@@ -441,6 +446,7 @@ export function ImpactSimulation() {
   };
 
   const handleFieldChange = (field: keyof ImpactSimulationForm, value: string | number) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -467,6 +473,10 @@ export function ImpactSimulation() {
 
 
   const goNext = async () => {
+    if (isReadOnly && currentStep === 2) {
+      setCurrentStep(prev => prev + 1);
+      return;
+    }
     if (currentStep === 2) {
       try {
         const methodMap: Record<string, string> = {
@@ -486,7 +496,7 @@ export function ImpactSimulation() {
         const sim = await ipageApi.createSimulation({
           risk_id: form.riskId,
           risk_score: selectedRisk?.scores?.[0]?.score ?? 0,
-          scenario: form.scenarioId,
+          scenario: scenarios.length > 0 ? form.scenarioId : null,
           method: methodMap[form.method] || 'linear',
           confidence: confMap[form.confidence] || 'medium',
           horizon: horizonMap[form.horizon] || '12m',
@@ -500,9 +510,9 @@ export function ImpactSimulation() {
         const res = await ipageApi.runSimulation(sim.id);
         setSimulationResult(res);
         setCurrentStep(prev => prev + 1);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error running simulation', err);
-        alert('Error running simulation');
+        alert('Error running simulation: ' + (err?.message || err));
       }
     } else if (currentStep < steps.length - 1) {
       setCurrentStep((prev) => prev + 1);
@@ -600,13 +610,13 @@ export function ImpactSimulation() {
                     <p className="text-sm font-semibold text-slate-900">Simulation scenario</p>
                     <p className="text-sm text-slate-500">Preconfigure a mitigation strategy.</p>
                   </div>
-                  <button
+                  {!isReadOnly && <button
                     type="button"
                     onClick={() => setShowCreateScenario(true)}
                     className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                   >
                     + New scenario
-                  </button>
+                  </button>}
                 </div>
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-slate-600">Scenario</label>
@@ -774,6 +784,7 @@ export function ImpactSimulation() {
                               type="checkbox"
                               checked={mechanism.active}
                               onChange={(e) => updateMechanism(mechanism.id, { active: e.target.checked })}
+                              disabled={isReadOnly}
                               className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                             />
                             Active
@@ -792,7 +803,7 @@ export function ImpactSimulation() {
                           max={1}
                           step={0.05}
                           value={mechanism.level}
-                          disabled={!mechanism.active}
+                          disabled={isReadOnly || !mechanism.active}
                           onChange={(e) => updateMechanism(mechanism.id, { level: Number(e.target.value) })}
                           className="w-full accent-blue-600"
                         />
@@ -902,6 +913,7 @@ export function ImpactSimulation() {
                   <button
                     type="button"
                     onClick={resetMatrix}
+                    disabled={isReadOnly}
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                   >
                     Reset matrix
@@ -953,6 +965,7 @@ export function ImpactSimulation() {
                                     type="checkbox"
                                     checked={mechanism.active}
                                     onChange={(e) => updateMechanism(mechanism.id, { active: e.target.checked })}
+                                    disabled={isReadOnly}
                                     className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                                   />
                                   Active
@@ -967,7 +980,8 @@ export function ImpactSimulation() {
                               <td key={indicator} className="px-2 py-2 text-center">
                                 <button
                                   type="button"
-                                  onClick={() => setEditingCell({ rmmId: mechanism.id, indicator })}
+                                  onClick={() => !isReadOnly && setEditingCell({ rmmId: mechanism.id, indicator })}
+                                  disabled={isReadOnly}
                                   className={`mx-auto inline-flex min-w-[3rem] items-center justify-center rounded-xl px-2 py-1 text-xs font-semibold transition ${getCellClasses(value)}`}
                                 >
                                   {value >= 0 ? '+' : ''}{value?.toFixed(1)}
@@ -1362,7 +1376,7 @@ export function ImpactSimulation() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                {!isReadOnly && <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <p className="text-sm font-semibold text-slate-900">Actions</p>
                   <div className="mt-4 space-y-3">
                     <button onClick={() => { alert('Your results have been successfully saved to the database! You can find them on your dashboard.'); window.location.reload(); }} className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700">Save results</button>
@@ -1370,7 +1384,7 @@ export function ImpactSimulation() {
                     <button onClick={exportCSV} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Export (CSV)</button>
                     <button className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Compare with another scenario</button>
                   </div>
-                </div>
+                </div>}
               </aside>
             </div>
           </div>
@@ -1386,19 +1400,19 @@ export function ImpactSimulation() {
             >
               Back
             </button>
+            {currentStep < steps.length - 1 && (
             <button
               type="button"
               onClick={goNext}
               className="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
             >
-              {currentStep === steps.length - 1
-                ? 'View summary'
-                : currentStep === 0
+              {currentStep === 0
                 ? 'Next: Simulation'
                 : currentStep === 1
                 ? 'Next: Impact matrix'
-                : 'Next'}
+                : 'Run simulation'}
             </button>
+            )}
           </div>
           <p className="text-sm text-slate-500">Step {currentStep + 1} of {steps.length}</p>
         </div>

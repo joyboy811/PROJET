@@ -126,7 +126,7 @@ export function Layout() {
             path: '/impact-simulation',
             label: 'Impact Simulation',
             icon: TrendingUp,
-            roles: ['responsable_org', 'decideur', 'observateur'],
+            roles: ['decideur', 'observateur'],
           },
         ],
       },

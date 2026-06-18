@@ -251,6 +251,9 @@ class DimensionViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
             qs = qs.filter(pillar_id=pillar_id)
         return qs
 
+    def perform_create(self, serializer):
+        serializer.save()
+
 
 class FactorViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = Factor.objects.prefetch_related('items').all()
@@ -264,6 +267,9 @@ class FactorViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
             qs = qs.filter(dimension_id=dimension_id)
         return qs
 
+    def perform_create(self, serializer):
+        serializer.save()
+
 
 class ItemViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
     queryset = Item.objects.all()
@@ -276,6 +282,9 @@ class ItemViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
         if factor_id:
             qs = qs.filter(factor_id=factor_id)
         return qs
+
+    def perform_create(self, serializer):
+        serializer.save()
 
 
 # ── RMM ViewSets ─────────────────────────────────────────────
@@ -511,6 +520,9 @@ class ItemResponseViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
         if campaign_id:
             qs = qs.filter(campaign_id=campaign_id)
         return qs
+
+    def perform_create(self, serializer):
+        serializer.save()
 
 
 class UserViewSet(viewsets.ModelViewSet):

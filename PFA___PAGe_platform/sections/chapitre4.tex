@@ -5,7 +5,7 @@ Une fois la conception validée, nous sommes passés à la phase de développeme
 \section{Outils et technologies utilisés}
 
 \subsection{React}
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.25\textwidth]{Logos/React logo.png}
     \caption{Logo de React}
@@ -13,7 +13,7 @@ Une fois la conception validée, nous sommes passés à la phase de développeme
 React est une bibliothèque JavaScript développée par Meta pour créer des interfaces utilisateur sous forme de composants réutilisables. Nous l'avons utilisé avec TypeScript pour le typage statique, ce qui facilite la maintenance du code et la détection d'erreurs.
 
 \subsection{Vite}
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.25\textwidth]{Logos/Vite logo.png}
     \caption{Logo de Vite}
@@ -21,39 +21,47 @@ React est une bibliothèque JavaScript développée par Meta pour créer des int
 Vite est un outil de build moderne pour les applications web. Il offre un serveur de développement rapide avec du rechargement à chaud (Hot Module Replacement) et un bundling optimisé pour la production. Nous l'avons choisi pour sa rapidité par rapport à des alternatives comme Webpack.
 
 \subsection{Tailwind CSS}
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.25\textwidth]{Logos/Tailwind logo.png}
     \caption{Logo de Tailwind CSS}
 \end{figure}
 Tailwind CSS est un framework CSS utility-first qui permet de styliser les composants directement dans le code sans écrire de fichiers CSS séparés. Il accélère le développement et assure une cohérence visuelle sur toute l'application.
 
+\subsection{Python}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.25\textwidth]{Logos/python.png}
+    \caption{Logo de Python}
+\end{figure}
+Python est le langage de programmation utilisé pour les deux backends de la plateforme. Sa syntaxe claire et son écosystème riche (Django, pandas, openpyxl) en font un choix adapté pour le développement d'API et le traitement de données.
+
 \subsection{Django et Django REST Framework}
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.25\textwidth]{Logos/Django logo.png}
     \caption{Logo de Django}
 \end{figure}
-Django est un framework web Python qui suit l'architecture MVT (Model-View-Template). Nous l'avons utilisé avec Django REST Framework pour exposer des API REST consommées par le frontend React. La plateforme comporte deux backends Django : un pour O-PAGe et un pour M-PAGe.
+Django est un framework web Python qui suit l'architecture MVT (Model-View-Template). Nous l'avons utilisé avec Django REST Framework (DRF) pour exposer des API REST consommées par le frontend React. La plateforme comporte deux backends Django : un pour O-PAGe et un pour M-PAGe.
 
 \subsection{PostgreSQL}
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.25\textwidth]{Logos/PostgreSQL Logo.png}
     \caption{Logo de PostgreSQL}
 \end{figure}
 PostgreSQL est le système de gestion de base de données relationnelle utilisé pour stocker l'ensemble des données de la plateforme (risques, indicateurs, piliers, campagnes, résultats). Les deux backends partagent la même base de données.
 
-\subsection{Docker et Docker Compose}
-\begin{figure}[h!]
+\subsection{Docker}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.25\textwidth]{Logos/Docker logo.png}
     \caption{Logo de Docker}
 \end{figure}
-Docker permet de conteneuriser chaque service de l'application (frontend, backend O-PAGe, backend M-PAGe, PostgreSQL, pgAdmin) dans des conteneurs isolés. Docker Compose orchestre l'ensemble de ces conteneurs et permet de lancer toute la plateforme avec une seule commande : \texttt{docker compose up --build}.
+Docker permet de conteneuriser chaque service de l'application (frontend, backend O-PAGe, backend M-PAGe, PostgreSQL, pgAdmin) dans des conteneurs isolés. Docker Compose coordonne l'ensemble de ces conteneurs en local et permet de lancer toute la plateforme sur une seule machine avec une seule commande : \texttt{docker compose up --build}.
 
 \subsection{Git et GitHub}
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.25\textwidth]{Logos/Github logo.png}
     \caption{Logo de GitHub}
@@ -63,7 +71,7 @@ Git est utilisé pour le versioning du code. GitHub sert de plateforme de collab
 \subsection{Récapitulatif des technologies}
 Le tableau suivant résume les principales technologies et leur rôle dans le projet :
 
-\begin{table}[h!]
+\begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
 \begin{tabular}{@{}p{0.30\textwidth}p{0.62\textwidth}@{}}
@@ -76,11 +84,13 @@ Vite & Bundler et serveur de développement \\
 \hline
 Tailwind CSS & Style et mise en page \\
 \hline
-Django + DRF & Backend et API REST \\
+Python & Langage backend \\
+\hline
+Django + DRF & Framework backend et API REST \\
 \hline
 PostgreSQL & Base de données relationnelle \\
 \hline
-Docker / Docker Compose & Conteneurisation et orchestration \\
+Docker & Conteneurisation et coordination locale \\
 \hline
 Git / GitHub & Versioning et collaboration \\
 \hline

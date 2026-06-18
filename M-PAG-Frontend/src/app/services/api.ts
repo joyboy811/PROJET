@@ -24,7 +24,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(error.error || error.detail || `HTTP ${res.status}`);
+    const msg = error.error || error.detail || (typeof error === 'object' ? Object.entries(error).map(([k, v]) => `${k}: ${v}`).join(', ') : `HTTP ${res.status}`);
+    throw new Error(msg);
   }
 
   if (res.status === 204) {
