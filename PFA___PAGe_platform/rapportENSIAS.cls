@@ -118,11 +118,6 @@
 \newpage
 }
 
-\newcommand{\tabledematieres}{
-\tableofcontents
-\newpage
-}
-
 \newcommand{\insererfigure}[4]{
 
 }

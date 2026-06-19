@@ -13,19 +13,19 @@ La plateforme PAGe définit sept rôles distincts :
 \hline
 \textbf{Acteur} & \textbf{Rôle dans la plateforme} \\
 \hline
-Administrateur & Gère les projets (création, modification, activation/désactivation), gère les comptes utilisateurs, attribue les rôles et affecte chaque utilisateur à un projet. \\
+Administrateur & Gère les projets (création, modification, activation/désactivation), gère les comptes utilisateurs, attribue les rôles et affecte chaque utilisateur à un projet. \\ 
 \hline
 Organisateur administratif & Configure le référentiel M-PAGe (piliers, dimensions, facteurs, items), gère les mécanismes de mitigation et leurs poids, lance et suit les campagnes, exporte les rapports. \\
 \hline
-Risk Manager & Gère les risques O-PAGe : création, édition et suppression des risques et de leurs indicateurs, suivi des scores. \\
+Responsable Risques & Gère les risques O-PAGe : création, édition et suppression des risques et de leurs indicateurs, suivi des scores. \\
 \hline
-Responsable organisationnel & Répond aux questionnaires M-PAGe, suit l'avancement des campagnes, participe aux simulations I-PAGe, exporte les rapports. \\
+Responsable Organisationnel & Répond aux questionnaires M-PAGe, suit l'avancement des campagnes, consulte les résultats. \\
 \hline
 Auditeur & Consulte les risques O-PAGe (lecture), analyse les résultats, comparaisons entre campagnes, exporte les rapports. \\
 \hline
-Décideur & Consulte les simulations I-PAGe, compare avant/après mitigation, exporte. \\
+Décideur & Configure et lance les simulations I-PAGe, crée des scénarios de mitigation, compare avant/après, exporte les rapports. \\
 \hline
-Observateur & Lecture seule : dashboard, résultats, analyse comparative, simulations, export. \\
+Observateur & Lecture seule : consulte les résultats et les comparaisons avant/après mitigation. \\
 \hline
 \end{tabular}
 \caption{Les sept acteurs de la PAGe Platform}
@@ -333,9 +333,119 @@ Observateur & Lecture seule : dashboard, résultats, analyse comparative, simula
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/I-PAGe.png}
+\includegraphics[width=0.85\textwidth]{figures/I-PAGe New.png}
 \caption{Diagramme de cas d'utilisation -- Module I-PAGe}
 \end{figure}
+
+\subsubsection{Consulter les résultats}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Consulter les résultats (4 onglets) \\
+\textbf{Objectif} & Visualiser les résultats de simulation à travers les 4 étapes. \\
+\textbf{Acteurs} & Observateur, Décideur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Une simulation a été exécutée. \\
+\textbf{Scénario nominal} & L'utilisateur consulte les résultats via les onglets Paramètres, Simulation, Matrice d'impact et Résultats. \\
+\textbf{Scénarios secondaires} & Aucun. \\
+\hline
+\end{tabular}
+\caption{Description -- Consulter les résultats}
+\end{table}
+
+\subsubsection{Comparer avant/après mitigation}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Comparer avant/après mitigation \\
+\textbf{Objectif} & Comparer le Risk Score avant et après application des mécanismes. \\
+\textbf{Acteurs} & Observateur, Décideur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Au moins une simulation exécutée. \\
+\textbf{Scénario nominal} & L'utilisateur visualise la comparaison du score initial et du score post-simulation. \\
+\textbf{Scénarios secondaires} & Comparer plusieurs scénarios entre eux. \\
+\hline
+\end{tabular}
+\caption{Description -- Comparer avant/après mitigation}
+\end{table}
+
+\subsubsection{Exporter les rapports}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Exporter les rapports \\
+\textbf{Objectif} & Télécharger les résultats de simulation en PDF ou CSV. \\
+\textbf{Acteurs} & Décideur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Des résultats de simulation disponibles. \\
+\textbf{Scénario nominal} & Le décideur choisit le format (PDF/CSV) et lance l'export. \\
+\textbf{Scénarios secondaires} & Sauvegarder les résultats en base. \\
+\hline
+\end{tabular}
+\caption{Description -- Exporter les rapports}
+\end{table}
+
+\subsubsection{Configurer les paramètres de simulation}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Configurer les paramètres de simulation \\
+\textbf{Objectif} & Sélectionner les risques cibles et définir les paramètres. \\
+\textbf{Acteurs} & Décideur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Des risques et indicateurs existent dans le système. \\
+\textbf{Scénario nominal} & Le décideur sélectionne les risques et configure les paramètres de la simulation. \\
+\textbf{Scénarios secondaires} & Modifier les paramètres existants. \\
+\hline
+\end{tabular}
+\caption{Description -- Configurer les paramètres de simulation}
+\end{table}
+
+\subsubsection{Créer un scénario de mitigation}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Créer un scénario de mitigation \\
+\textbf{Objectif} & Définir un scénario en sélectionnant les mécanismes à appliquer. \\
+\textbf{Acteurs} & Décideur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Des mécanismes RMM configurés. \\
+\textbf{Scénario nominal} & Le décideur sélectionne les mécanismes et crée un scénario de mitigation. \\
+\textbf{Scénarios secondaires} & Dupliquer un scénario existant. \\
+\hline
+\end{tabular}
+\caption{Description -- Créer un scénario de mitigation}
+\end{table}
 
 \subsubsection{Simuler l'effet des mécanismes}
 \begin{table}[H]
@@ -346,14 +456,15 @@ Observateur & Lecture seule : dashboard, résultats, analyse comparative, simula
 \multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
 \hline
 \textbf{Titre} & Simuler l'effet des mécanismes \\
-\textbf{Objectif} & Simuler l'impact des RMM et comparer avant/après. \\
-\textbf{Acteurs} & Organisateur administratif, Resp. organisationnel, Décideur, Auditeur \\
+\textbf{Objectif} & Lancer la simulation d'impact des mécanismes sur le Risk Score. \\
+\textbf{Acteurs} & Décideur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
-\textbf{Pré-conditions} & Matrice d'impact configurée, niveaux de déploiement saisis. \\
-\textbf{Scénario nominal} & L'utilisateur active des mécanismes, lance la simulation, le système recalcule les indicateurs à t+1 et affiche le nouveau Risk Score. \\
-\textbf{Scénarios secondaires} & Comparer plusieurs scénarios ; exporter. \\
+\textbf{Pré-conditions} & Scénario créé, matrice d'impact et niveaux de déploiement saisis. \\
+\textbf{Scénario nominal} & Le décideur lance la simulation, le système recalcule les indicateurs à t+1 et affiche le nouveau Risk Score. \\
+\textbf{Scénarios secondaires} & Comparer plusieurs scénarios ; sauvegarder les résultats. \\
+\textbf{Inclut} & Configurer la matrice d'impact RMM ; Saisir niveaux de déploiement RMM. \\
 \hline
 \end{tabular}
 \caption{Description -- Simuler l'effet des mécanismes}
@@ -369,23 +480,45 @@ Observateur & Lecture seule : dashboard, résultats, analyse comparative, simula
 \hline
 \textbf{Titre} & Configurer la matrice d'impact RMM \\
 \textbf{Objectif} & Définir les coefficients d'impact mécanisme/indicateur. \\
-\textbf{Acteurs} & Organisateur administratif, Auditeur \\
+\textbf{Acteurs} & Décideur (via <<include>>) \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
 \textbf{Pré-conditions} & Mécanismes et indicateurs existent. \\
-\textbf{Scénario nominal} & L'utilisateur associe des indicateurs à un mécanisme et définit les valeurs d'impact. \\
-\textbf{Scénarios secondaires} & Modifier des coefficients. \\
+\textbf{Scénario nominal} & Le décideur associe des indicateurs à un mécanisme et définit les valeurs d'impact. \\
+\textbf{Scénarios secondaires} & Modifier des coefficients existants. \\
 \hline
 \end{tabular}
 \caption{Description -- Configurer la matrice d'impact}
+\end{table}
+
+\subsubsection{Saisir niveaux de déploiement RMM}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Saisir niveaux de déploiement RMM \\
+\textbf{Objectif} & Définir le niveau de déploiement de chaque mécanisme dans le scénario. \\
+\textbf{Acteurs} & Décideur (via <<include>>) \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Scénario et RMM sélectionnés. \\
+\textbf{Scénario nominal} & Le décideur définit le pourcentage de déploiement (0--100\%) pour chaque mécanisme. \\
+\textbf{Scénarios secondaires} & Ajuster les niveaux après un premier calcul. \\
+\hline
+\end{tabular}
+\caption{Description -- Saisir niveaux de déploiement RMM}
 \end{table}
 
 \subsection{Analytics et Reporting}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/UC_Analytics.png}
+\includegraphics[width=0.85\textwidth]{figures/Analytics and Reporting.png}
 \caption{Diagramme de cas d'utilisation -- Analytics et Reporting}
 \end{figure}
 
@@ -399,16 +532,38 @@ Observateur & Lecture seule : dashboard, résultats, analyse comparative, simula
 \hline
 \textbf{Titre} & Consulter les tableaux de bord \\
 \textbf{Objectif} & Visualiser les résultats globaux. \\
-\textbf{Acteurs} & Resp. organisationnel, Décideur, Observateur, Auditeur \\
+\textbf{Acteurs} & Responsable organisationnel, Observateur, Auditeur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
 \textbf{Pré-conditions} & Des résultats existent. \\
 \textbf{Scénario nominal} & L'utilisateur visualise les scores par risque, par mécanisme et le GPM global. \\
-\textbf{Scénarios secondaires} & Filtrer par campagne ; comparer avant/après. \\
+\textbf{Scénarios secondaires} & Filtrer par campagne. \\
 \hline
 \end{tabular}
 \caption{Description -- Consulter les tableaux de bord}
+\end{table}
+
+\subsubsection{Comparer avant/après mitigation}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.25\textwidth}p{0.67\textwidth}@{}}
+\hline
+\multicolumn{2}{c}{\textbf{Sommaire d'identification}} \\
+\hline
+\textbf{Titre} & Comparer avant/après mitigation \\
+\textbf{Objectif} & Analyser l'évolution des scores entre campagnes ou avant/après simulation. \\
+\textbf{Acteurs} & Décideur, Observateur, Auditeur \\
+\hline
+\multicolumn{2}{c}{\textbf{Description des scénarios}} \\
+\hline
+\textbf{Pré-conditions} & Au moins deux jeux de résultats disponibles. \\
+\textbf{Scénario nominal} & L'utilisateur sélectionne les éléments à comparer et visualise les écarts. \\
+\textbf{Scénarios secondaires} & Comparer plusieurs campagnes entre elles. \\
+\hline
+\end{tabular}
+\caption{Description -- Comparer avant/après mitigation}
 \end{table}
 
 \subsubsection{Exporter les rapports}
@@ -421,7 +576,7 @@ Observateur & Lecture seule : dashboard, résultats, analyse comparative, simula
 \hline
 \textbf{Titre} & Exporter les rapports \\
 \textbf{Objectif} & Télécharger un rapport PDF ou Excel. \\
-\textbf{Acteurs} & Resp. organisationnel, Décideur, Observateur, Auditeur \\
+\textbf{Acteurs} & Responsable organisationnel, Décideur, Auditeur \\
 \hline
 \multicolumn{2}{c}{\textbf{Description des scénarios}} \\
 \hline
@@ -495,4 +650,4 @@ Ce diagramme montre l'architecture multi-projets et la gestion des utilisateurs.
 \end{itemize}
 
 \section{Conclusion}
-Ce chapitre a présenté les sept acteurs, les cas d'utilisation par module, le diagramme de classes, le MCD et l'architecture technique. Le chapitre suivant détaille la réalisation.
+Ce chapitre a présenté les sept acteurs, les cas d'utilisation par module et ses description, les diagrammes de classes et l'architecture technique. Le chapitre suivant détaille la réalisation.

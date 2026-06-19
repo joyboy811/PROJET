@@ -87,6 +87,9 @@ services:
     restart: always
     ports:
       - "5173:5173"
+    volumes:
+      - ./M-PAG-Frontend/src:/app/src
+      - ./M-PAG-Frontend/index.html:/app/index.html
     environment:
       - VITE_API_PROXY_TARGET=http://mpage-backend:8001
     depends_on:

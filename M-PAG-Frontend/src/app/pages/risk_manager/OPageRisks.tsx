@@ -382,15 +382,6 @@ export function OPageRisks() {
           </p>
         </div>
       )}
-
-      {/* Info */}
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> The data above is retrieved in real time
-          from the O-PAGe API. Any changes in O-PAGe will be automatically reflected
-          here when refreshed.
-        </p>
-      </div>
     </div>
   );
 }

@@ -35,12 +35,14 @@ export default defineConfig({
   assetsInclude: ['**/*.svg', '**/*.csv'],
 
   server: {
+    host: '0.0.0.0',
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:8001',
         changeOrigin: true,
-        // Rewrite cookie domain so backend Set-Cookie works when proxied by Vite
-        // (ensures sessionid/csrftoken are set for the dev origin)
         cookieDomainRewrite: '',
       },
     },

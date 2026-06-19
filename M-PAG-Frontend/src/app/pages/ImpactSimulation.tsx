@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { opageApi, ipageApi, OPageRisk, IPageScenario, IPageMechanism, IPageIndicator, IPageSimulationRunResponse } from '../services/api';
+import { opageApi, ipageApi, OPageRisk, IPageScenario, IPageSimulationRunResponse } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const steps = ['Parameters', 'Simulation', 'Impact matrix', 'Results'];
@@ -174,8 +174,7 @@ export function ImpactSimulation() {
   const [loading, setLoading] = useState(true);
   const [risks, setRisks] = useState<OPageRisk[]>([]);
   const [scenarios, setScenarios] = useState<IPageScenario[]>([]);
-  const [apiMechanisms, setApiMechanisms] = useState<IPageMechanism[]>([]);
-  const [apiIndicators, setApiIndicators] = useState<IPageIndicator[]>([]);
+  const [apiIndicators, setApiIndicators] = useState<{id: number; name: string; code: string; order: number}[]>([]);
   const [simulationResult, setSimulationResult] = useState<IPageSimulationRunResponse | null>(null);
 
   // Create-scenario modal state
@@ -213,33 +212,44 @@ export function ImpactSimulation() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [rRes, sRes, mRes, iRes] = await Promise.all([
+        const [rRes, sRes] = await Promise.all([
           opageApi.risks(),
           ipageApi.scenarios(),
-          ipageApi.mechanisms(),
-          ipageApi.indicators()
         ]);
         setRisks(rRes);
         setScenarios(sRes);
-        setApiMechanisms(mRes);
-        setApiIndicators(iRes);
         
-        if (rRes.length > 0) setForm(f => ({ ...f, riskId: rRes[0].id }));
+        if (rRes.length > 0) {
+          setForm(f => ({ ...f, riskId: rRes[0].id }));
+          // Load mechanisms from the first risk's RMMs
+          const riskRmms = rRes[0].rmms || [];
+          // Extract unique key pillars as "indicators" for the matrix
+          const kpMap = new Map<string, { id: number; name: string; code: string; order: number }>();
+          riskRmms.forEach((rmm: any) => {
+            (rmm.kp_weights || []).forEach((kpw: any, idx: number) => {
+              if (!kpMap.has(kpw.key_pillar_name)) {
+                kpMap.set(kpw.key_pillar_name, { id: kpw.key_pillar, name: kpw.key_pillar_name, code: kpw.key_pillar_code || kpw.key_pillar_name, order: idx });
+              }
+            });
+          });
+          setApiIndicators(Array.from(kpMap.values()));
+          const mechState = riskRmms.map((rmm: any) => {
+            const effectsRecord: Record<string, number> = {};
+            (rmm.kp_weights || []).forEach((kpw: any) => {
+              effectsRecord[kpw.key_pillar_name] = kpw.weight;
+            });
+            return {
+              id: rmm.id,
+              name: rmm.name,
+              description: rmm.description || '',
+              active: true,
+              level: 0.5,
+              effects: effectsRecord
+            };
+          });
+          setMechanisms(mechState);
+        }
         if (sRes.length > 0) setForm(f => ({ ...f, scenarioId: sRes[0].id }));
-
-        const mechState = mRes.map(m => {
-          const effectsRecord: Record<string, number> = {};
-          m.effects.forEach(e => { effectsRecord[e.indicator_name] = e.value; });
-          return {
-            id: m.id,
-            name: m.name,
-            description: m.description,
-            active: m.default_active,
-            level: m.default_level,
-            effects: effectsRecord
-          };
-        });
-        setMechanisms(mechState);
       } catch (err) {
         console.error('Error loading simulation data', err);
       } finally {
@@ -334,11 +344,15 @@ export function ImpactSimulation() {
   };
 
   const resetMatrix = () => {
+    const risk = risks.find(r => r.id === form.riskId);
+    const riskRmms = risk?.rmms || [];
     setMechanisms(prev => prev.map(item => {
-      const defaultItem = apiMechanisms.find(m => m.id === item.id);
-      if (defaultItem) {
+      const rmm = riskRmms.find((r: any) => r.id === item.id);
+      if (rmm) {
         const effectsRecord: Record<string, number> = {};
-        defaultItem.effects.forEach(e => { effectsRecord[e.indicator_name] = e.value; });
+        (rmm.kp_weights || []).forEach((kpw: any) => {
+          effectsRecord[kpw.key_pillar_name] = kpw.weight;
+        });
         return { ...item, effects: effectsRecord };
       }
       return item;
@@ -448,6 +462,37 @@ export function ImpactSimulation() {
   const handleFieldChange = (field: keyof ImpactSimulationForm, value: string | number) => {
     if (isReadOnly) return;
     setForm((prev) => ({ ...prev, [field]: value }));
+    // Update mechanisms and indicators when risk changes
+    if (field === 'riskId') {
+      const risk = risks.find(r => r.id === Number(value));
+      if (risk) {
+        const riskRmms = risk.rmms || [];
+        const kpMap = new Map<string, { id: number; name: string; code: string; order: number }>();
+        riskRmms.forEach((rmm: any) => {
+          (rmm.kp_weights || []).forEach((kpw: any, idx: number) => {
+            if (!kpMap.has(kpw.key_pillar_name)) {
+              kpMap.set(kpw.key_pillar_name, { id: kpw.key_pillar, name: kpw.key_pillar_name, code: kpw.key_pillar_code || kpw.key_pillar_name, order: idx });
+            }
+          });
+        });
+        setApiIndicators(Array.from(kpMap.values()));
+        const mechState = riskRmms.map((rmm: any) => {
+          const effectsRecord: Record<string, number> = {};
+          (rmm.kp_weights || []).forEach((kpw: any) => {
+            effectsRecord[kpw.key_pillar_name] = kpw.weight;
+          });
+          return {
+            id: rmm.id,
+            name: rmm.name,
+            description: rmm.description || '',
+            active: true,
+            level: 0.5,
+            effects: effectsRecord
+          };
+        });
+        setMechanisms(mechState);
+      }
+    }
   };
 
   const handleCreateScenario = async () => {
@@ -479,36 +524,60 @@ export function ImpactSimulation() {
     }
     if (currentStep === 2) {
       try {
-        const methodMap: Record<string, string> = {
-          'Linear propagation': 'linear',
-          'Simplified Monte Carlo': 'monte_carlo',
-          'Diffusion model': 'diffusion'
-        };
-        const confMap: Record<string, string> = {
-          'Low (25%)': 'low',
-          'Medium (50%)': 'medium',
-          'High (75%)': 'high'
-        };
-        const horizonMap: Record<string, string> = {
-          '6 months': '6m', '12 months': '12m', '18 months': '18m', '24 months': '24m'
-        };
+        // Local simulation calculation using RMM kp_weights
+        const initialScore = selectedRisk?.scores?.[0]?.score ?? 0;
+        const active = mechanisms.filter(m => m.active);
         
-        const sim = await ipageApi.createSimulation({
-          risk_id: form.riskId,
-          risk_score: selectedRisk?.scores?.[0]?.score ?? 0,
-          scenario: scenarios.length > 0 ? form.scenarioId : null,
-          method: methodMap[form.method] || 'linear',
-          confidence: confMap[form.confidence] || 'medium',
-          horizon: horizonMap[form.horizon] || '12m',
-          iterations: form.iterations,
-          mechanisms: mechanisms.map(m => ({
-            mechanism_id: m.id,
-            active: m.active,
-            level: m.level
-          }))
+        // Calculate average weighted impact from active mechanisms
+        let totalImpact = 0;
+        const indicatorResults: {indicator: string; impact_value: number; reduction_pct: number}[] = [];
+        
+        for (const ind of apiIndicators) {
+          const values = active.map(m => (m.effects[ind.name] ?? 0) * m.level);
+          const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+          indicatorResults.push({ indicator: ind.name, impact_value: avg, reduction_pct: Math.round(avg * 100) });
+          totalImpact += avg;
+        }
+        
+        const matrixAvg = apiIndicators.length ? totalImpact / apiIndicators.length : 0;
+        const scoreAfter = Math.max(0, initialScore - Math.min(0.35, matrixAvg * 0.5));
+        const reductionAbs = scoreAfter - initialScore;
+        const reductionRel = initialScore > 0 ? (reductionAbs / initialScore) * 100 : 0;
+        
+        const classify = (s: number) => s >= 0.75 ? 'CRITICAL' : s >= 0.50 ? 'HIGH' : s >= 0.25 ? 'MODERATE' : 'LOW';
+        const confMap: Record<string, number> = { 'Low (25%)': 25, 'Medium (50%)': 50, 'High (75%)': 75 };
+        const confidence = Math.min(95, (confMap[form.confidence] || 50) + Math.min(15, active.length * 3));
+        
+        // Build trend data
+        const horizonMonths: Record<string, number> = { '6 months': 6, '12 months': 12, '18 months': 18, '24 months': 24 };
+        const months = horizonMonths[form.horizon] || 12;
+        const steps_count = Math.min(4, Math.floor(months / 3)) || 1;
+        const beforeTrend = [];
+        const afterTrend = [];
+        for (let i = 0; i <= steps_count; i++) {
+          const t = i * Math.floor(months / steps_count);
+          beforeTrend.push({ label: t === 0 ? 'Initial (t0)' : `${t} mois`, value: Math.max(0, initialScore - i * 0.045) });
+          afterTrend.push({ label: t === 0 ? 'Initial (t0)' : `${t} mois`, value: Math.max(0, scoreAfter - i * 0.025) });
+        }
+        
+        // Scenario comparison
+        const scenarioComparison = [{
+          name: selectedScenario?.name || 'Current Scenario',
+          initial: initialScore,
+          after: +scoreAfter.toFixed(4),
+          reduction: Math.abs(+reductionRel.toFixed(1)),
+          level: classify(scoreAfter),
+          best: true,
+          confidence,
+        }];
+        
+        setSimulationResult({
+          simulation: { risk_score_after: +scoreAfter.toFixed(4), reduction_absolute: +reductionAbs.toFixed(4), reduction_relative: +reductionRel.toFixed(1), confidence_score: confidence, risk_level_before: classify(initialScore), risk_level_after: classify(scoreAfter) } as any,
+          before_trend: beforeTrend,
+          after_trend: afterTrend,
+          scenario_comparison: scenarioComparison,
+          indicator_results: indicatorResults,
         });
-        const res = await ipageApi.runSimulation(sim.id);
-        setSimulationResult(res);
         setCurrentStep(prev => prev + 1);
       } catch (err: any) {
         console.error('Error running simulation', err);
@@ -1382,7 +1451,7 @@ export function ImpactSimulation() {
                     <button onClick={() => { alert('Your results have been successfully saved to the database! You can find them on your dashboard.'); window.location.reload(); }} className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700">Save results</button>
                     <button onClick={exportPDF} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Export (PDF)</button>
                     <button onClick={exportCSV} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Export (CSV)</button>
-                    <button className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Compare with another scenario</button>
+                    <button onClick={() => setCurrentStep(0)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Compare with another scenario</button>
                   </div>
                 </div>}
               </aside>

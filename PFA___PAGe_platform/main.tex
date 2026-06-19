@@ -24,6 +24,9 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.4em}
 
+% Reduce vertical space before chapter titles
+\titlespacing*{\chapter}{0pt}{-30pt}{20pt}
+
 % ===== MASQUER TOUS LES NUMÉROS =====
 \captionsetup{labelformat=empty}         % Figures
 \captionsetup[table]{labelformat=empty}  % Tableaux
@@ -56,9 +59,13 @@ Akram \textsc{AL OUMAMI}\\
 % ==========================
 \vspace{-1cm}
 \tabledematieres
+
+\input{sections/liste_abreviations}
+\input{sections/introduction_generale}
 \input{sections/chapitre1}
 \input{sections/chapitre2}
 \input{sections/chapitre3}
 \input{sections/chapitre4}
+\input{sections/conclusion_generale}
 
 \end{document}

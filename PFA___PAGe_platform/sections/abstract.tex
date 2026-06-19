@@ -1,17 +1,14 @@
 \chapter*{Abstract}
-% ... Ajoutez ici le contenu du résumé ...
-\thispagestyle{plain}
 
-This report presents the Final Year Project ``Development and Design of an Algorithmic Governance Risk Management Platform''. The project encompasses requirements analysis, design, and operational implementation of a comprehensive platform called PAGe Platform, intended for public organizations seeking to govern algorithmic risks effectively and systematically.
+The proliferation of algorithmic systems within public administrations introduces major systemic risks: decision-making bias, processing opacity, fragmented assessment tools, and legal fragility. In the absence of an integrated solution to quantify, monitor, and mitigate these risks, this end-of-year project proposes the design and implementation of the \textbf{PAGe Platform} (Public Algorithmic Governance Platform).
 
-The first part defines the essential concepts and notions underlying the entire approach: what constitutes algorithmic risk, evaluation indicators, mitigation mechanisms (RMM), governance pillars, and institutional maturity. It establishes the conceptual and methodological framework enabling public organizations to systematically evaluate and monitor the risks associated with the use of algorithms in their decision-making and operational processes.
+The platform is built around three complementary modules. \textbf{O-PAGe} (Observation) provides quantitative identification and evaluation of algorithmic risks through normalized indicators, weighted scores, and a four-level categorization (Low, Moderate, High, Critical). \textbf{M-PAGe} (Mitigation) measures organizational maturity through multi-level aggregation (Items, Factors, Dimensions, Risk Level) and computes global compliance indices (RMMC, RMC, GPM). \textbf{I-PAGe} (Impact) enables prospective simulation of the effect of mitigation mechanisms on risk indicators, using an impact matrix and RMM effectiveness calculations.
 
-The second part describes the general and functional architecture of the platform, organized around three complementary and integrated modules: a first module dedicated to assessing the severity and exposure to algorithmic risks, a second module for evaluating institutional capacities and available mitigation mechanisms, and a third module for impact analysis and scenario simulation. It details the logic of aggregating elementary measurements and the methodological process for calculating institutional maturity scores.
+The technical architecture relies on a React frontend with TypeScript, Vite, and Tailwind CSS, two Django REST Framework backends (O-PAGe on port 8000, M-PAGe on port 8001), a PostgreSQL database, all orchestrated via Docker Compose (5 containers). Seven user roles were identified and implemented, covering the full algorithmic governance cycle: from administration to decision-making, including auditing and comparative observation.
 
-The third part reports and documents the concrete realization phase of the project: data modeling and structuring, implementation of functional modules, and rigorous validation of computational results. It presents the key deliverables produced (formal definitions, aggregation tables, numerical examples, detailed calculation rules) and describes the principal use cases and scenarios supported by the platform.
+The results demonstrate a functional platform offering role-differentiated dashboards, structured evaluation campaigns, multi-project comparative analysis, and a simulation module with results export.
 
-The report concludes by providing practical recommendations for the effective operational use of the platform and correct interpretation of results, enabling organizations to progressively improve their institutional governance of algorithmic risks.
-\vspace{6cm}
-\begin{quote}
-\textbf{Keywords:} Algorithmic governance, Indicators, Mitigation, Simulation, Dashboard.
-\end{quote}
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} Algorithmic governance, Algorithmic risks, Indicators, Organizational maturity, Mitigation, Impact simulation, Dashboard, Public administration.
+
+/\cleardoublepage

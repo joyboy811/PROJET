@@ -48,12 +48,16 @@ class IndicatorValue(models.Model):
     created_at       = models.DateTimeField(auto_now_add=True)
 
     def normalize(self):
-        if self.indicator.status == IndicatorStatus.POSITIVE:
-            return self.raw_value
-        elif self.indicator.status == IndicatorStatus.NEGATIVE:
-            return 1 - self.raw_value
-        else:
-            return self.raw_value
+        val_min = self.indicator.val_min
+        val_max = self.indicator.val_max
+        rang = val_max - val_min
+        if rang == 0:
+            return 0.0
+        ratio = (self.raw_value - val_min) / rang
+        ratio = max(0.0, min(1.0, ratio))
+        if self.indicator.status == IndicatorStatus.NEGATIVE:
+            return round(1 - ratio, 4)
+        return round(ratio, 4)
 
     def save(self, *args, **kwargs):
         # 1. Normaliser automatiquement
