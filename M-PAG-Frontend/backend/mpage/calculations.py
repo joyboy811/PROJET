@@ -64,6 +64,19 @@ def compute_readiness_level(campaign_id: int, pillar_id: int) -> float:
     pillar = KeyPillar.objects.get(id=pillar_id)
     dimensions = pillar.dimensions.all()
     if not dimensions.exists():
+        # Fallback: find another pillar in same project that has dimensions
+        # Match by pillar_type, name, or code
+        candidates = KeyPillar.objects.filter(project=pillar.project).exclude(id=pillar.id)
+        for alt_pillar in candidates:
+            if alt_pillar.pillar_type == pillar.pillar_type or \
+               alt_pillar.name.lower() == pillar.name.lower() or \
+               alt_pillar.code.lower() == pillar.pillar_type.lower() or \
+               alt_pillar.pillar_type.lower() == pillar.code.lower():
+                alt_dims = alt_pillar.dimensions.all()
+                if alt_dims.exists():
+                    dimensions = alt_dims
+                    break
+    if not dimensions.exists():
         return 0.0
     scores = [compute_dimension_score(campaign_id, d.id) for d in dimensions]
     return sum(scores) / len(scores)
@@ -80,8 +93,6 @@ def compute_rmmc(campaign_id: int, rmm_id: int) -> float:
 
     total = 0.0
     for w in weights:
-        if w.key_pillar.code in LEGACY_PILLAR_CODES:
-            continue
         rl = compute_readiness_level(campaign_id, w.key_pillar_id)
         total += w.weight * rl
     return total
@@ -117,7 +128,7 @@ def run_full_calculation(campaign_id: int) -> dict:
     Stores results in the database and returns a summary dict.
     """
     campaign = Campaign.objects.get(id=campaign_id)
-    pillars = KeyPillar.objects.exclude(code__in=LEGACY_PILLAR_CODES)
+    pillars = KeyPillar.objects.filter(project=campaign.project) if campaign.project else KeyPillar.objects.all()
 
     # 1. Compute and store Readiness Levels
     rl_results = {}

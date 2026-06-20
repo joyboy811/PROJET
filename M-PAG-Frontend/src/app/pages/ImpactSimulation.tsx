@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { opageApi, ipageApi, OPageRisk, IPageScenario, IPageSimulationRunResponse } from '../services/api';
+import { opageApi, ipageApi, rmmsApi, OPageRisk, IPageScenario, IPageSimulationRunResponse } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const steps = ['Parameters', 'Simulation', 'Impact matrix', 'Results'];
@@ -174,6 +174,7 @@ export function ImpactSimulation() {
   const [loading, setLoading] = useState(true);
   const [risks, setRisks] = useState<OPageRisk[]>([]);
   const [scenarios, setScenarios] = useState<IPageScenario[]>([]);
+  const [allRmms, setAllRmms] = useState<any[]>([]);
   const [apiIndicators, setApiIndicators] = useState<{id: number; name: string; code: string; order: number}[]>([]);
   const [simulationResult, setSimulationResult] = useState<IPageSimulationRunResponse | null>(null);
 
@@ -212,17 +213,19 @@ export function ImpactSimulation() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [rRes, sRes] = await Promise.all([
+        const [rRes, sRes, allRmms] = await Promise.all([
           opageApi.risks(),
           ipageApi.scenarios(),
+          rmmsApi.list(),
         ]);
         setRisks(rRes);
         setScenarios(sRes);
+        setAllRmms(allRmms);
         
         if (rRes.length > 0) {
           setForm(f => ({ ...f, riskId: rRes[0].id }));
-          // Load mechanisms from the first risk's RMMs
-          const riskRmms = rRes[0].rmms || [];
+          // Load mechanisms from mpage_rmm filtered by risk
+          const riskRmms = allRmms.filter((rmm: any) => rmm.associated_risk_id === rRes[0].id);
           // Extract unique key pillars as "indicators" for the matrix
           const kpMap = new Map<string, { id: number; name: string; code: string; order: number }>();
           riskRmms.forEach((rmm: any) => {
@@ -344,8 +347,7 @@ export function ImpactSimulation() {
   };
 
   const resetMatrix = () => {
-    const risk = risks.find(r => r.id === form.riskId);
-    const riskRmms = risk?.rmms || [];
+    const riskRmms = allRmms.filter((r: any) => r.associated_risk_id === form.riskId);
     setMechanisms(prev => prev.map(item => {
       const rmm = riskRmms.find((r: any) => r.id === item.id);
       if (rmm) {
@@ -464,34 +466,31 @@ export function ImpactSimulation() {
     setForm((prev) => ({ ...prev, [field]: value }));
     // Update mechanisms and indicators when risk changes
     if (field === 'riskId') {
-      const risk = risks.find(r => r.id === Number(value));
-      if (risk) {
-        const riskRmms = risk.rmms || [];
-        const kpMap = new Map<string, { id: number; name: string; code: string; order: number }>();
-        riskRmms.forEach((rmm: any) => {
-          (rmm.kp_weights || []).forEach((kpw: any, idx: number) => {
-            if (!kpMap.has(kpw.key_pillar_name)) {
-              kpMap.set(kpw.key_pillar_name, { id: kpw.key_pillar, name: kpw.key_pillar_name, code: kpw.key_pillar_code || kpw.key_pillar_name, order: idx });
-            }
-          });
+      const riskRmms = allRmms.filter((rmm: any) => rmm.associated_risk_id === Number(value));
+      const kpMap = new Map<string, { id: number; name: string; code: string; order: number }>();
+      riskRmms.forEach((rmm: any) => {
+        (rmm.kp_weights || []).forEach((kpw: any, idx: number) => {
+          if (!kpMap.has(kpw.key_pillar_name)) {
+            kpMap.set(kpw.key_pillar_name, { id: kpw.key_pillar, name: kpw.key_pillar_name, code: kpw.key_pillar_code || kpw.key_pillar_name, order: idx });
+          }
         });
-        setApiIndicators(Array.from(kpMap.values()));
-        const mechState = riskRmms.map((rmm: any) => {
-          const effectsRecord: Record<string, number> = {};
-          (rmm.kp_weights || []).forEach((kpw: any) => {
-            effectsRecord[kpw.key_pillar_name] = kpw.weight;
-          });
-          return {
-            id: rmm.id,
-            name: rmm.name,
-            description: rmm.description || '',
-            active: true,
-            level: 0.5,
-            effects: effectsRecord
-          };
+      });
+      setApiIndicators(Array.from(kpMap.values()));
+      const mechState = riskRmms.map((rmm: any) => {
+        const effectsRecord: Record<string, number> = {};
+        (rmm.kp_weights || []).forEach((kpw: any) => {
+          effectsRecord[kpw.key_pillar_name] = kpw.weight;
         });
-        setMechanisms(mechState);
-      }
+        return {
+          id: rmm.id,
+          name: rmm.name,
+          description: rmm.description || '',
+          active: true,
+          level: 0.5,
+          effects: effectsRecord
+        };
+      });
+      setMechanisms(mechState);
     }
   };
 

@@ -354,7 +354,7 @@ class CampaignViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
             })
 
         non_legacy_pillar_ids = set(
-            KeyPillar.objects.exclude(code__in=LEGACY_PILLAR_CODES)
+            KeyPillar.objects.all()
             .values_list('id', flat=True)
         )
         existing_rl_pillar_ids = set(
@@ -369,9 +369,7 @@ class CampaignViewSet(ProjectFilterMixin, viewsets.ModelViewSet):
         return Response({
             'campaign': CampaignSerializer(campaign).data,
             'readiness_levels': ReadinessLevelSerializer(
-                campaign.readiness_levels.filter(rmm=None).exclude(
-                    key_pillar__code__in=LEGACY_PILLAR_CODES
-                ), many=True
+                campaign.readiness_levels.filter(rmm=None), many=True
             ).data,
             'rmmc': RMMCResultSerializer(
                 campaign.rmmc_results.all(), many=True
