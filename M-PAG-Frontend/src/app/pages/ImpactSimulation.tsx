@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { opageApi, ipageApi, rmmsApi, OPageRisk, IPageScenario, IPageSimulationRunResponse } from '../services/api';
+import { opageApi, ipageApi, rmmsApi, campaignsApi, OPageRisk, IPageScenario, IPageSimulationRunResponse } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const steps = ['Parameters', 'Simulation', 'Impact matrix', 'Results'];
@@ -148,7 +148,7 @@ const defaultMechanisms = [
 ];
 
 interface ImpactSimulationForm {
-  riskId: number;
+  riskIds: number[];
   scenarioId: number;
   horizon: string;
   period: string;
@@ -175,6 +175,7 @@ export function ImpactSimulation() {
   const [risks, setRisks] = useState<OPageRisk[]>([]);
   const [scenarios, setScenarios] = useState<IPageScenario[]>([]);
   const [allRmms, setAllRmms] = useState<any[]>([]);
+  const [rmmcScores, setRmmcScores] = useState<Record<number, number>>({});
   const [apiIndicators, setApiIndicators] = useState<{id: number; name: string; code: string; order: number}[]>([]);
   const [simulationResult, setSimulationResult] = useState<IPageSimulationRunResponse | null>(null);
 
@@ -185,7 +186,7 @@ export function ImpactSimulation() {
   const [creatingScenario, setCreatingScenario] = useState(false);
 
   const [form, setForm] = useState<ImpactSimulationForm>({
-    riskId: 1,
+    riskIds: [],
     scenarioId: 1,
     horizon: defaultHorizons[1],
     period: defaultPeriods[0],
@@ -213,33 +214,48 @@ export function ImpactSimulation() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [rRes, sRes, allRmms] = await Promise.all([
+        const [rRes, sRes, rmmsData, campaignsList] = await Promise.all([
           opageApi.risks(),
           ipageApi.scenarios(),
           rmmsApi.list(),
+          campaignsApi.list(),
         ]);
         setRisks(rRes);
         setScenarios(sRes);
-        setAllRmms(allRmms);
-        
-        if (rRes.length > 0) {
-          setForm(f => ({ ...f, riskId: rRes[0].id }));
-          // Load mechanisms from mpage_rmm filtered by risk
-          const riskRmms = allRmms.filter((rmm: any) => rmm.associated_risk_id === rRes[0].id);
-          // Extract unique key pillars as "indicators" for the matrix
-          const kpMap = new Map<string, { id: number; name: string; code: string; order: number }>();
-          riskRmms.forEach((rmm: any) => {
-            (rmm.kp_weights || []).forEach((kpw: any, idx: number) => {
-              if (!kpMap.has(kpw.key_pillar_name)) {
-                kpMap.set(kpw.key_pillar_name, { id: kpw.key_pillar, name: kpw.key_pillar_name, code: kpw.key_pillar_code || kpw.key_pillar_name, order: idx });
-              }
+        setAllRmms(rmmsData);
+
+        // Load RMMC scores from latest completed campaign
+        const completedCampaigns = campaignsList.filter((c: any) => c.status === 'completed');
+        let rmmcMap: Record<number, number> = {};
+        if (completedCampaigns.length > 0) {
+          const latestCampaign = completedCampaigns[0];
+          try {
+            const results = await campaignsApi.results(latestCampaign.id);
+            (results.rmmc || []).forEach((r: any) => {
+              rmmcMap[r.rmm] = r.score;
             });
-          });
-          setApiIndicators(Array.from(kpMap.values()));
+          } catch (e) { /* no results yet */ }
+        }
+        setRmmcScores(rmmcMap);
+
+        if (rRes.length > 0) {
+          setForm(f => ({ ...f, riskIds: rRes.map((r: any) => r.id) }));
+          // Matrix columns = all risks (selected)
+          const riskColumns = rRes.map((r: any, idx: number) => ({
+            id: r.id, name: r.name, code: r.name, order: idx
+          }));
+          setApiIndicators(riskColumns);
+
+          // Matrix rows = ALL RMMs for selected risks
+          const selectedRiskIds = rRes.map((r: any) => r.id);
+          const riskRmms = rmmsData.filter((rmm: any) => selectedRiskIds.includes(rmm.associated_risk_id));
           const mechState = riskRmms.map((rmm: any) => {
             const effectsRecord: Record<string, number> = {};
-            (rmm.kp_weights || []).forEach((kpw: any) => {
-              effectsRecord[kpw.key_pillar_name] = kpw.weight;
+            // Count RMMs per risk for weight distribution
+            const rmmsForSameRisk = riskRmms.filter((r: any) => r.associated_risk_id === rmm.associated_risk_id);
+            const numRmmsForRisk = rmmsForSameRisk.length || 1;
+            rRes.forEach((r: any) => {
+              effectsRecord[r.name] = (r.id === rmm.associated_risk_id) ? +(1 / numRmmsForRisk).toFixed(3) : 0;
             });
             return {
               id: rmm.id,
@@ -262,7 +278,8 @@ export function ImpactSimulation() {
     loadData();
   }, []);
 
-  const selectedRisk = risks.find((risk) => risk.id === form.riskId);
+  const selectedRisks = risks.filter((risk) => form.riskIds.includes(risk.id));
+  const selectedRisk = selectedRisks[0]; // for backward compat in display
   const selectedScenario = scenarios.find((scenario) => scenario.id === form.scenarioId);
 
   const activeMechanisms = mechanisms.filter((mechanism) => mechanism.active);
@@ -331,29 +348,65 @@ export function ImpactSimulation() {
 
   const updateMechanismEffect = (id: number, indicator: string, value: number) => {
     if (isReadOnly) return;
+    const rmm = allRmms.find((r: any) => r.id === id);
+    const risk = risks.find(r => r.name === indicator);
+    if (rmm && risk && rmm.associated_risk_id !== risk.id) return;
+
+    // Get all mechanisms associated with this risk
+    const associatedMechs = mechanisms.filter(m => {
+      const r = allRmms.find((x: any) => x.id === m.id);
+      return r && r.associated_risk_id === risk?.id;
+    });
+
+    // If only 1 mechanism, force to 1
+    if (associatedMechs.length <= 1) {
+      setMechanisms((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, effects: { ...item.effects, [indicator]: 1.0 } } : item
+        ),
+      );
+      return;
+    }
+
+    const otherAssociated = associatedMechs.filter(m => m.id !== id);
+    const n = otherAssociated.length;
+
+    // Determine allowed range for this value:
+    // Others must stay in [-1, 1], so remainder = 1 - value must be distributable
+    // perOther = (1 - value) / n must be in [-1, 1]
+    // → -1 <= (1-value)/n <= 1
+    // → -n <= 1-value <= n
+    // → 1-n <= value <= 1+n
+    // Also clamp to [-1, 1] per spec "poids entre 0 et 1" (but allow negative for 3+ mechs)
+    const minValue = Math.max(-1, 1 - n);
+    const maxValue = 1; // max is always 1 per spec
+    const clampedValue = Math.max(minValue, Math.min(maxValue, value));
+
+    const remainder = +(1 - clampedValue).toFixed(6);
+    const perOther = +(remainder / n).toFixed(3);
+
     setMechanisms((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              effects: {
-                ...item.effects,
-                [indicator]: Number(value?.toFixed(2)),
-              },
-            }
-          : item,
-      ),
+      prev.map((item) => {
+        if (item.id === id) {
+          return { ...item, effects: { ...item.effects, [indicator]: +clampedValue.toFixed(3) } };
+        }
+        if (otherAssociated.some(m => m.id === item.id)) {
+          return { ...item, effects: { ...item.effects, [indicator]: perOther } };
+        }
+        return item;
+      }),
     );
   };
 
   const resetMatrix = () => {
-    const riskRmms = allRmms.filter((r: any) => r.associated_risk_id === form.riskId);
+    const riskRmms = allRmms.filter((r: any) => form.riskIds.includes(r.associated_risk_id));
+    const numRmms = riskRmms.length || 1;
     setMechanisms(prev => prev.map(item => {
       const rmm = riskRmms.find((r: any) => r.id === item.id);
       if (rmm) {
         const effectsRecord: Record<string, number> = {};
-        (rmm.kp_weights || []).forEach((kpw: any) => {
-          effectsRecord[kpw.key_pillar_name] = kpw.weight;
+        risks.forEach((r: any) => {
+          effectsRecord[r.name] = (r.id === rmm.associated_risk_id) ? +(1 / numRmms).toFixed(3) : 0;
         });
         return { ...item, effects: effectsRecord };
       }
@@ -464,22 +517,32 @@ export function ImpactSimulation() {
   const handleFieldChange = (field: keyof ImpactSimulationForm, value: string | number) => {
     if (isReadOnly) return;
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Update mechanisms and indicators when risk changes
-    if (field === 'riskId') {
-      const riskRmms = allRmms.filter((rmm: any) => rmm.associated_risk_id === Number(value));
-      const kpMap = new Map<string, { id: number; name: string; code: string; order: number }>();
-      riskRmms.forEach((rmm: any) => {
-        (rmm.kp_weights || []).forEach((kpw: any, idx: number) => {
-          if (!kpMap.has(kpw.key_pillar_name)) {
-            kpMap.set(kpw.key_pillar_name, { id: kpw.key_pillar, name: kpw.key_pillar_name, code: kpw.key_pillar_code || kpw.key_pillar_name, order: idx });
-          }
-        });
-      });
-      setApiIndicators(Array.from(kpMap.values()));
+  };
+
+  const handleRiskToggle = (riskId: number) => {
+    if (isReadOnly) return;
+    setForm(prev => {
+      const newRiskIds = prev.riskIds.includes(riskId)
+        ? prev.riskIds.filter(id => id !== riskId)
+        : [...prev.riskIds, riskId];
+      return { ...prev, riskIds: newRiskIds };
+    });
+    // Update mechanisms and matrix
+    setTimeout(() => {
+      const newRiskIds = form.riskIds.includes(riskId)
+        ? form.riskIds.filter(id => id !== riskId)
+        : [...form.riskIds, riskId];
+      const riskRmms = allRmms.filter((rmm: any) => newRiskIds.includes(rmm.associated_risk_id));
+      const riskColumns = risks.filter(r => newRiskIds.includes(r.id)).map((r, idx) => ({
+        id: r.id, name: r.name, code: r.name, order: idx
+      }));
+      setApiIndicators(riskColumns);
       const mechState = riskRmms.map((rmm: any) => {
         const effectsRecord: Record<string, number> = {};
-        (rmm.kp_weights || []).forEach((kpw: any) => {
-          effectsRecord[kpw.key_pillar_name] = kpw.weight;
+        const rmmsForSameRisk = riskRmms.filter((r: any) => r.associated_risk_id === rmm.associated_risk_id);
+        const numRmmsForRisk = rmmsForSameRisk.length || 1;
+        risks.forEach((r: any) => {
+          effectsRecord[r.name] = (r.id === rmm.associated_risk_id && newRiskIds.includes(r.id)) ? +(1 / numRmmsForRisk).toFixed(3) : 0;
         });
         return {
           id: rmm.id,
@@ -491,7 +554,7 @@ export function ImpactSimulation() {
         };
       });
       setMechanisms(mechState);
-    }
+    }, 0);
   };
 
   const handleCreateScenario = async () => {
@@ -523,55 +586,96 @@ export function ImpactSimulation() {
     }
     if (currentStep === 2) {
       try {
-        // Local simulation calculation using RMM kp_weights
-        const initialScore = selectedRisk?.scores?.[0]?.score ?? 0;
+        // === I-PAGe Simulation (Cahier de charges) ===
+        // Risk_i(t+1) = Risk_i(t) - Σ(M_Impact_j × Effi_RMM_j) for each selected risk
         const active = mechanisms.filter(m => m.active);
-        
-        // Calculate average weighted impact from active mechanisms
-        let totalImpact = 0;
-        const indicatorResults: {indicator: string; impact_value: number; reduction_pct: number}[] = [];
-        
-        for (const ind of apiIndicators) {
-          const values = active.map(m => (m.effects[ind.name] ?? 0) * m.level);
-          const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-          indicatorResults.push({ indicator: ind.name, impact_value: avg, reduction_pct: Math.round(avg * 100) });
-          totalImpact += avg;
-        }
-        
-        const matrixAvg = apiIndicators.length ? totalImpact / apiIndicators.length : 0;
-        const scoreAfter = Math.max(0, initialScore - Math.min(0.35, matrixAvg * 0.5));
-        const reductionAbs = scoreAfter - initialScore;
-        const reductionRel = initialScore > 0 ? (reductionAbs / initialScore) * 100 : 0;
-        
+        const method = form.method;
         const classify = (s: number) => s >= 0.75 ? 'CRITICAL' : s >= 0.50 ? 'HIGH' : s >= 0.25 ? 'MODERATE' : 'LOW';
         const confMap: Record<string, number> = { 'Low (25%)': 25, 'Medium (50%)': 50, 'High (75%)': 75 };
         const confidence = Math.min(95, (confMap[form.confidence] || 50) + Math.min(15, active.length * 3));
-        
-        // Build trend data
-        const horizonMonths: Record<string, number> = { '6 months': 6, '12 months': 12, '18 months': 18, '24 months': 24 };
-        const months = horizonMonths[form.horizon] || 12;
-        const steps_count = Math.min(4, Math.floor(months / 3)) || 1;
-        const beforeTrend = [];
-        const afterTrend = [];
-        for (let i = 0; i <= steps_count; i++) {
-          const t = i * Math.floor(months / steps_count);
-          beforeTrend.push({ label: t === 0 ? 'Initial (t0)' : `${t} mois`, value: Math.max(0, initialScore - i * 0.045) });
-          afterTrend.push({ label: t === 0 ? 'Initial (t0)' : `${t} mois`, value: Math.max(0, scoreAfter - i * 0.025) });
+
+        // Simulate each selected risk
+        const riskResults: {name: string; initial: number; after: number; reduction: number; level: string}[] = [];
+        const indicatorResults: {indicator: string; impact_value: number; reduction_pct: number}[] = [];
+
+        for (const risk of selectedRisks) {
+          const initialScore = risk.scores?.[0]?.score ?? 0;
+          const riskName = risk.name;
+
+          // Calculate total reduction for this risk
+          let totalReduction = 0;
+          for (const mech of active) {
+            const rmmc = rmmcScores[mech.id] ?? 0;
+            const deployment = mech.level;
+            const mImpact = mech.effects[riskName] ?? 0;
+
+            if (method === 'Simplified Monte Carlo') {
+              const iterations = form.iterations || 1000;
+              let sum = 0;
+              for (let iter = 0; iter < iterations; iter++) {
+                const noise = 1 + (Math.random() - 0.5) * 0.4;
+                const d = Math.max(0, Math.min(1, deployment * noise));
+                sum += mImpact * rmmc * d;
+              }
+              totalReduction += sum / iterations;
+            } else if (method === 'Diffusion model') {
+              const steps = 10;
+              let contribution = 0;
+              for (let step = 1; step <= steps; step++) {
+                const decayFactor = 1 - Math.exp(-step / 3);
+                contribution += (mImpact * rmmc * deployment * decayFactor) / steps;
+              }
+              totalReduction += contribution;
+            } else {
+              totalReduction += mImpact * rmmc * deployment;
+            }
+          }
+
+          const scoreAfter = Math.max(0, Math.min(1, initialScore - totalReduction));
+          const reductionRel = initialScore > 0 ? ((scoreAfter - initialScore) / initialScore) * 100 : 0;
+
+          riskResults.push({
+            name: riskName,
+            initial: initialScore,
+            after: +scoreAfter.toFixed(4),
+            reduction: Math.abs(+reductionRel.toFixed(1)),
+            level: classify(scoreAfter),
+          });
+          indicatorResults.push({
+            indicator: riskName,
+            impact_value: +totalReduction.toFixed(4),
+            reduction_pct: Math.round(totalReduction * 100),
+          });
         }
-        
-        // Scenario comparison
-        const scenarioComparison = [{
-          name: selectedScenario?.name || 'Current Scenario',
-          initial: initialScore,
-          after: +scoreAfter.toFixed(4),
-          reduction: Math.abs(+reductionRel.toFixed(1)),
-          level: classify(scoreAfter),
-          best: true,
+
+        // Use first risk for trend display
+        const firstRisk = riskResults[0] || { initial: 0, after: 0 };
+        const reductionAbs = firstRisk.after - firstRisk.initial;
+        const reductionRel = firstRisk.initial > 0 ? (reductionAbs / firstRisk.initial) * 100 : 0;
+
+        // Build trend: Risk(t) → Risk(t+1) only
+        const beforeTrend = [
+          { label: 'Risk(t)', value: +firstRisk.initial.toFixed(4) },
+          { label: 'Risk(t+1)', value: +firstRisk.initial.toFixed(4) },
+        ];
+        const afterTrend = [
+          { label: 'Risk(t)', value: +firstRisk.initial.toFixed(4) },
+          { label: 'Risk(t+1)', value: +firstRisk.after.toFixed(4) },
+        ];
+
+        // Scenario comparison (one entry per risk)
+        const scenarioComparison = riskResults.map((r, idx) => ({
+          name: r.name,
+          initial: r.initial,
+          after: r.after,
+          reduction: r.reduction,
+          level: r.level,
+          best: idx === 0,
           confidence,
-        }];
-        
+        }));
+
         setSimulationResult({
-          simulation: { risk_score_after: +scoreAfter.toFixed(4), reduction_absolute: +reductionAbs.toFixed(4), reduction_relative: +reductionRel.toFixed(1), confidence_score: confidence, risk_level_before: classify(initialScore), risk_level_after: classify(scoreAfter) } as any,
+          simulation: { risk_score_after: firstRisk.after, reduction_absolute: +reductionAbs.toFixed(4), reduction_relative: +reductionRel.toFixed(1), confidence_score: confidence, risk_level_before: classify(firstRisk.initial), risk_level_after: classify(firstRisk.after), method: form.method } as any,
           before_trend: beforeTrend,
           after_trend: afterTrend,
           scenario_comparison: scenarioComparison,
@@ -637,38 +741,38 @@ export function ImpactSimulation() {
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Risk selection</p>
-                    <p className="text-sm text-slate-500">Choose the risk that the simulation covers.</p>
+                    <p className="text-sm text-slate-500">Select one or more risks to simulate.</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-600">Risk</label>
-                    <select
-                      value={form.riskId}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFieldChange('riskId', Number(e.target.value))}
-                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500"
-                    >
-                      {risks.map((risk) => (
-                        <option key={risk.id} value={risk.id}>{risk.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="rounded-3xl border border-slate-200 bg-white p-4">
-                    <p className="text-sm font-semibold text-gray-900">{selectedRisk?.name}</p>
-                    <p className="text-sm text-slate-600 mt-2">{selectedRisk?.description}</p>
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                      {(() => {
-                        const riskCategory = selectedRisk?.scores?.[0]?.category ?? 'N/A';
-                        const categoryColorClass = riskCategory === 'CRITICAL' ? 'bg-purple-100 text-purple-700'
-                          : riskCategory === 'HIGH' ? 'bg-red-100 text-red-700'
-                          : riskCategory === 'MODERATE' ? 'bg-amber-100 text-amber-800'
-                          : riskCategory === 'LOW' ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-slate-100 text-slate-700';
-                        return <span className={`rounded-full px-3 py-1 ${categoryColorClass}`}>{riskCategory}</span>;
-                      })()}
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Score {selectedRisk?.scores?.[0]?.score?.toFixed(2) ?? '—'}</span>
-                    </div>
-                  </div>
+                <div className="space-y-3">
+                  {risks.map((risk) => {
+                    const isSelected = form.riskIds.includes(risk.id);
+                    const riskCategory = risk.scores?.[0]?.category ?? 'N/A';
+                    const categoryColorClass = riskCategory === 'CRITICAL' ? 'bg-purple-100 text-purple-700'
+                      : riskCategory === 'HIGH' ? 'bg-red-100 text-red-700'
+                      : riskCategory === 'MODERATE' ? 'bg-amber-100 text-amber-800'
+                      : riskCategory === 'LOW' ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-slate-100 text-slate-700';
+                    return (
+                      <label key={risk.id} className={`flex items-center gap-3 rounded-2xl border p-4 cursor-pointer transition ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleRiskToggle(risk.id)}
+                          disabled={isReadOnly}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900">{risk.name}</p>
+                          <p className="text-xs text-slate-500 mt-1">{risk.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`rounded-full px-2 py-0.5 text-xs ${categoryColorClass}`}>{riskCategory}</span>
+                          <span className="text-xs text-slate-600">{risk.scores?.[0]?.score?.toFixed(2) ?? '—'}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1044,15 +1148,18 @@ export function ImpactSimulation() {
                           {apiIndicators.map((indicatorObj) => { 
                             const indicator = indicatorObj.name; 
                             const value = mechanism.effects[indicator] ?? 0;
+                            const rmm = allRmms.find((r: any) => r.id === mechanism.id);
+                            const riskCol = risks.find(r => r.name === indicator);
+                            const isAssociated = rmm && riskCol && rmm.associated_risk_id === riskCol.id;
                             return (
                               <td key={indicator} className="px-2 py-2 text-center">
                                 <button
                                   type="button"
-                                  onClick={() => !isReadOnly && setEditingCell({ rmmId: mechanism.id, indicator })}
-                                  disabled={isReadOnly}
-                                  className={`mx-auto inline-flex min-w-[3rem] items-center justify-center rounded-xl px-2 py-1 text-xs font-semibold transition ${getCellClasses(value)}`}
+                                  onClick={() => !isReadOnly && isAssociated && setEditingCell({ rmmId: mechanism.id, indicator })}
+                                  disabled={isReadOnly || !isAssociated}
+                                  className={`mx-auto inline-flex min-w-[3rem] items-center justify-center rounded-xl px-2 py-1 text-xs font-semibold transition ${isAssociated ? getCellClasses(value) : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                                 >
-                                  {value >= 0 ? '+' : ''}{value?.toFixed(1)}
+                                  {isAssociated ? (value >= 0 ? '+' : '') + value?.toFixed(2) : '0'}
                                 </button>
                               </td>
                             );
@@ -1259,11 +1366,11 @@ export function ImpactSimulation() {
                   <p className="text-sm font-semibold text-slate-900">Result confidence</p>
                   <div className="mt-5 space-y-4">
                     <div>
-                      <p className="text-3xl font-semibold text-slate-900">65%</p>
-                      <p className="text-sm text-slate-500">Based on current parameters and data</p>
+                      <p className="text-3xl font-semibold text-slate-900">{simulationResult?.simulation?.confidence_score ?? 0}%</p>
+                      <p className="text-sm text-slate-500">Method: {simulationResult?.simulation?.method ?? form.method}</p>
                     </div>
                     <div className="inline-flex rounded-3xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-                      Average
+                      {(simulationResult?.simulation?.confidence_score ?? 0) >= 70 ? 'High' : (simulationResult?.simulation?.confidence_score ?? 0) >= 45 ? 'Average' : 'Low'}
                     </div>
                   </div>
                 </div>

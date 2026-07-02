@@ -8,14 +8,14 @@ BEGIN;
 
 -- 1. Project
 INSERT INTO mpage_project (name, description, is_active, created_at)
-VALUES ('Project Alpha', 'AI governance pilot project', true, NOW());
+VALUES ('Projet 1', 'AI governance pilot project', true, NOW());
 
 -- 2. M-PAGe Key Pillars
 INSERT INTO mpage_keypillar (project_id, name, code, pillar_type, icon)
 VALUES
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'AI Governance', 'P-GOV', 'governance', 'shield'),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Technical & Security', 'P-TECH', 'technical', 'cpu'),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Organizational', 'P-ORG', 'organizational', 'users');
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'AI Governance', 'P-GOV', 'governance', 'shield'),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Technical & Security', 'P-TECH', 'technical', 'cpu'),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Organizational', 'P-ORG', 'organizational', 'users');
 
 -- 3. Dimensions
 INSERT INTO mpage_dimension (pillar_id, name, code) VALUES
@@ -74,9 +74,9 @@ INSERT INTO mpage_item (factor_id, label, code) VALUES
 -- ================================================================
 INSERT INTO "OPAGe_risk" (name, description, project_id)
 VALUES
-('Algorithmic Bias', 'Risk of discrimination in automated decisions', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-('Decision Opacity', 'Lack of transparency in AI processes', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-('Personal Data Breach', 'Risk of privacy violation by algorithms', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1));
+('Algorithmic Bias', 'Risk of discrimination in automated decisions', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+('Decision Opacity', 'Lack of transparency in AI processes', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+('Personal Data Breach', 'Risk of privacy violation by algorithms', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1));
 
 -- 7. O-PAGe Indicators
 INSERT INTO "OPAGe_indicator" (risk_id, label, weight, status, val_min, val_max)
@@ -114,19 +114,19 @@ VALUES
 -- 10. O-PAGe Key Pillars
 INSERT INTO "OPAGe_keypillar" (name, type, project_id)
 VALUES
-('AI Governance', 'governance', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-('Technical & Security', 'technical', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-('Organizational', 'organizational', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1));
+('AI Governance', 'governance', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+('Technical & Security', 'technical', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+('Organizational', 'organizational', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1));
 
 -- 11. O-PAGe RMMs
 INSERT INTO "OPAGe_rmm" (risk_id, name, description, project_id)
 VALUES
-((SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Regular algorithmic audit', 'Periodic audits of models and training data', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-((SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Technical data improvements', 'Improve data quality and coverage', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-((SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Transparency program', 'Publication of explainability reports', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-((SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Training & awareness', 'Ongoing staff training on AI governance', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-((SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Enhanced data protection', 'Multi-layer encryption and access controls', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1)),
-((SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Data governance framework', 'Formal data governance program', (SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1));
+((SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Regular algorithmic audit', 'Periodic audits of models and training data', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+((SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Technical data improvements', 'Improve data quality and coverage', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+((SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Transparency program', 'Publication of explainability reports', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+((SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Training & awareness', 'Ongoing staff training on AI governance', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+((SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Enhanced data protection', 'Multi-layer encryption and access controls', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1)),
+((SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Data governance framework', 'Formal data governance program', (SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1));
 
 -- 12. O-PAGe RMM Key Pillar Weights
 INSERT INTO "OPAGe_rmmkeypillarweight" (rmm_id, key_pillar_id, weight)
@@ -165,12 +165,12 @@ FROM "OPAGe_rmm" rmm CROSS JOIN "OPAGe_keypillar" kp WHERE rmm.name='Data govern
 -- ================================================================
 INSERT INTO mpage_rmm (project_id, name, description, associated_risk_id, associated_risk_name)
 VALUES
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Regular algorithmic audit', 'Periodic audits of models', (SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Algorithmic Bias'),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Technical data improvements', 'Improve data quality and coverage', (SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Algorithmic Bias'),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Transparency program', 'Publication of explainability reports', (SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Decision Opacity'),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Training & awareness', 'Ongoing staff training', (SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Decision Opacity'),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Enhanced data protection', 'Multi-layer encryption and access controls', (SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Personal Data Breach'),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Data governance framework', 'Formal data governance program', (SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Personal Data Breach');
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Regular algorithmic audit', 'Periodic audits of models', (SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Algorithmic Bias'),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Technical data improvements', 'Improve data quality and coverage', (SELECT id FROM "OPAGe_risk" WHERE name='Algorithmic Bias' LIMIT 1), 'Algorithmic Bias'),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Transparency program', 'Publication of explainability reports', (SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Decision Opacity'),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Training & awareness', 'Ongoing staff training', (SELECT id FROM "OPAGe_risk" WHERE name='Decision Opacity' LIMIT 1), 'Decision Opacity'),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Enhanced data protection', 'Multi-layer encryption and access controls', (SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Personal Data Breach'),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Data governance framework', 'Formal data governance program', (SELECT id FROM "OPAGe_risk" WHERE name='Personal Data Breach' LIMIT 1), 'Personal Data Breach');
 
 -- 14. M-PAGe RMM Key Pillar Weights
 INSERT INTO mpage_rmm_kp_weight (rmm_id, key_pillar_id, weight)
@@ -213,7 +213,7 @@ WHERE rmm.name='Data governance framework' AND kp.code IN ('P-GOV','P-TECH','P-O
 -- 15. Campaign + Responses + Results
 -- ================================================================
 INSERT INTO mpage_campaign (project_id, name, organization, status, launch_date)
-VALUES ((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Q2 2026 Assessment', 'IT Department', 'completed', '2026-06-01');
+VALUES ((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Q2 2026 Assessment', 'IT Department', 'completed', '2026-06-01');
 
 INSERT INTO mpage_item_response (campaign_id, item_id, response, comment)
 SELECT (SELECT id FROM mpage_campaign WHERE name='Q2 2026 Assessment' LIMIT 1), i.id,
@@ -260,8 +260,8 @@ VALUES ((SELECT id FROM mpage_campaign WHERE name='Q2 2026 Assessment' LIMIT 1),
 -- ================================================================
 INSERT INTO ipage_scenario (project_id, name, description, created_at)
 VALUES
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Governance & technical strengthening', 'Scenario combining governance controls and technical actions to reduce risk.', NOW()),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Compliance-focused approach', 'Scenario centered on regulatory compliance and formal audits.', NOW()),
-((SELECT id FROM mpage_project WHERE name='Project Alpha' LIMIT 1), 'Full mitigation', 'All mechanisms activated at maximum level.', NOW());
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Governance & technical strengthening', 'Scenario combining governance controls and technical actions to reduce risk.', NOW()),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Compliance-focused approach', 'Scenario centered on regulatory compliance and formal audits.', NOW()),
+((SELECT id FROM mpage_project WHERE name='Projet 1' LIMIT 1), 'Full mitigation', 'All mechanisms activated at maximum level.', NOW());
 
 COMMIT;
